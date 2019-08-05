@@ -10,12 +10,23 @@ fs.readFile(
     let tournamentStringArray = data.split("\nPokerStars Tournament");
     tournamentStringArray.shift();
     tournamentStringArray.forEach((content, index) => {
-      console.log(content);
+      content.split("\n").forEach(string => {
+        if (/\s+\d+:\s/.test(string)) {
+          console.log(getPlayerPosition(string));
+        }
+      });
     });
     /* let tournaments = tournamentStringArray.map<Tournament>(content=>{
     })*/
   }
 );
+
+function getPlayerPosition(playerInfo: string): number {
+  let match = playerInfo.match(/\s+\d+:\s/);
+  if (match !== null)
+    return Number.parseInt(match[0].replace(/(?:[\s:]+)/g, ""));
+  return -1;
+}
 
 function getSartDate(content: string): Date {
   let string = content

@@ -8,7 +8,9 @@ import {
   comparingDates,
   parseDollars,
   matchCurrency,
-  getPokerStarsDate
+  getPokerStarsDate,
+  isANumberCheck,
+  parsingNumberFromMatchString
 } from "../methods";
 
 let newTournaments$ = bindCallback(readTournamentSummary);
@@ -111,13 +113,10 @@ function readTournamentSummary(
 function getRebuyAddon(tournamentInfo: string): number[] | null {
   let matchRebuy = tournamentInfo.match(/(\d+\srebuy)/g);
   let matchAddon = tournamentInfo.match(/(\d+\saddon)/g);
-  if (matchRebuy && matchAddon) {
-    let rebuy = Number.parseInt(matchRebuy[0].replace(/[^\d]/g, ""));
-    let addon = Number.parseInt(matchAddon[0].replace(/[^\d]/g, ""));
-    if (Number.isNaN(rebuy) && Number.isNaN(addon)) throw new NotANumberError();
-    return [rebuy, addon];
-  }
-  if (matchAddon || matchRebuy) throw new Error("this is not consider");
+  let rebuy = parsingNumberFromMatchString(matchRebuy);
+  let addon = parsingNumberFromMatchString(matchAddon);
+  if (rebuy && addon) return [rebuy, addon];
+  if (rebuy || addon) throw new Error("this is not consider");
   return null;
 }
 
@@ -177,12 +176,9 @@ function getPlayerName(playerInfo: string) {
 
 function getPlayerPosition(playerInfo: string): number {
   let match = playerInfo.match(/\s+\d+:\s/);
-  if (match !== null) {
-    let result = Number.parseInt(match[0].replace(/(?:[\s:]+)/g, ""));
-    if (Number.isNaN(result)) throw new NotANumberError();
-    return result;
-  }
-  return -1;
+  let result = parsingNumberFromMatchString(match);
+  if (!result) return -1;
+  return result;
 }
 
 function getSartDate(tournamentInfo: string): Date {
@@ -205,8 +201,7 @@ function getEndDate(tournamentInfo: string): Date | null {
 
 function getTournamentId(tournamentInfo: string): number {
   let result = Number.parseInt(tournamentInfo.split(" #")[1].split(",")[0]);
-  if (Number.isNaN(result)) throw new NotANumberError();
-  return result;
+  return isANumberCheck(result);
 }
 
 function getBuyIn(tournamentInfo: string): number[] {
@@ -222,9 +217,7 @@ function getBuyIn(tournamentInfo: string): number[] {
       if (index == 0) paidMinusTaken = Number.parseFloat(element);
       else taken = Number.parseFloat(element);
     });
-  if (Number.isNaN(paidMinusTaken) || Number.isNaN(taken))
-    throw new Error("not a number");
-  return [paidMinusTaken, taken];
+  return [isANumberCheck(paidMinusTaken), isANumberCheck(taken)];
 }
 
 function getPrizePool(tournamentInfo: string): number | string {
@@ -235,8 +228,7 @@ function getPrizePool(tournamentInfo: string): number | string {
         .split(" ")[0]
         .replace(/[$]/g, "")
     );
-    if (Number.isNaN(result)) throw new NotANumberError();
-    return result;
+    return isANumberCheck(result);
   }
   let matchTargetTournament = tournamentInfo.match(/Target\sTournament\s#\d+/g);
   let matchNumberTickets = tournamentInfo.match(/\d+\stickets/g);

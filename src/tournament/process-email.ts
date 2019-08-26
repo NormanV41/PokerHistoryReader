@@ -9,7 +9,7 @@ import {
   parseDollars,
   matchCurrency,
   getPokerStarsDate,
-  isANumberCheck,
+  checkIfNumber,
   parsingNumberFromMatchString
 } from "../methods";
 
@@ -201,7 +201,7 @@ function getEndDate(tournamentInfo: string): Date | null {
 
 function getTournamentId(tournamentInfo: string): number {
   let result = Number.parseInt(tournamentInfo.split(" #")[1].split(",")[0]);
-  return isANumberCheck(result);
+  return checkIfNumber(result);
 }
 
 function getBuyIn(tournamentInfo: string): number[] {
@@ -217,7 +217,7 @@ function getBuyIn(tournamentInfo: string): number[] {
       if (index == 0) paidMinusTaken = Number.parseFloat(element);
       else taken = Number.parseFloat(element);
     });
-  return [isANumberCheck(paidMinusTaken), isANumberCheck(taken)];
+  return [checkIfNumber(paidMinusTaken), checkIfNumber(taken)];
 }
 
 function getPrizePool(tournamentInfo: string): number | string {
@@ -228,7 +228,7 @@ function getPrizePool(tournamentInfo: string): number | string {
         .split(" ")[0]
         .replace(/[$]/g, "")
     );
-    return isANumberCheck(result);
+    return checkIfNumber(result);
   }
   let matchTargetTournament = tournamentInfo.match(/Target\sTournament\s#\d+/g);
   let matchNumberTickets = tournamentInfo.match(/\d+\stickets/g);

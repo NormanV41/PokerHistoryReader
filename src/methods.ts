@@ -18,12 +18,31 @@ export function matchCurrency(test: string) {
 
 export function parseDollars(money: string): number {
   let result = Number.parseFloat(money.replace(/[\,\$]/g, ""));
-  if (Number.isNaN(result)) throw new NotANumberError();
-  return result;
+  return checkIfNumber(result);
 }
 
 export function getPokerStarsDate(dateStringWithOutEt: string): Date {
   return timezone
     .tz(dateStringWithOutEt, "YYYY/MM/DD HH:mm:ss", "America/New_York")
     .toDate();
+}
+
+export function checkIfNumber(number: number) {
+  if (Number.isNaN(number)) throw new NotANumberError();
+  return number;
+}
+
+export function parsingNumberFromMatchString(
+  match: RegExpMatchArray | null,
+  isFloat: boolean = false
+): number | null {
+  if (!match) {
+    return null;
+  }
+  if (!isFloat) {
+    let id = Number.parseInt(match[0]);
+    return checkIfNumber(id);
+  }
+  let id = Number.parseFloat(match[0]);
+  return checkIfNumber(id);
 }

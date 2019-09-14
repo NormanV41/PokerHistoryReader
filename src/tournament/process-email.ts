@@ -1,5 +1,4 @@
 import * as fs from "fs";
-import { NotANumberError } from "../models/not-a-number-error";
 import { Player } from "./models/player";
 import { Tournament } from "./models/tournament";
 import { bindCallback } from "rxjs";
@@ -13,15 +12,17 @@ import {
   parsingNumberFromMatchString
 } from "../methods";
 
-let newTournaments$ = bindCallback(readTournamentSummary);
+const newTournaments$ = bindCallback(readTournamentSummary);
 export let existingTournaments$ = bindCallback(readExistingTournaments);
 
 function writeTournamentsJson(tournaments: Tournament[]) {
   fs.writeFile(
     "./data/tournament-summaries/ProcessData/tournaments.json",
     JSON.stringify(tournaments),
-    error => {
-      if (error) throw error;
+    (error) => {
+      if (error) {
+        throw error;
+      }
     }
   );
 }
@@ -31,21 +32,23 @@ export function addTournaments(tournamentsSummaryFileName: string) {
   let oldTournaments: Tournament[] | null = null;
   newTournaments$(tournamentsSummaryFileName)
     .pipe(
-      map(data =>
+      map((data) =>
         data.sort((el1, el2) => {
           return comparingDates(el1.start, el2.start);
         })
       )
     )
-    .subscribe(data => {
+    .subscribe((data) => {
       newTournaments = data;
-      if (newTournaments && oldTournaments)
+      if (newTournaments && oldTournaments) {
         mergingTournaments(newTournaments, oldTournaments);
+      }
     });
-  existingTournaments$().subscribe(data => {
+  existingTournaments$().subscribe((data) => {
     oldTournaments = data;
-    if (newTournaments && oldTournaments)
+    if (newTournaments && oldTournaments) {
       mergingTournaments(newTournaments, oldTournaments);
+    }
   });
 }
 
@@ -53,16 +56,18 @@ function mergingTournaments(
   newTournaments: Tournament[],
   oldTournaments: Tournament[]
 ) {
-  let oldGreatestDate = new Date(
+  const oldGreatestDate = new Date(
     oldTournaments[oldTournaments.length - 1].start
   ).getTime();
-  let cutIndex = newTournaments.findIndex(tournament => {
-    let start = tournament.start.getTime();
+  const cutIndex = newTournaments.findIndex((tournament) => {
+    const start = tournament.start.getTime();
     return start > oldGreatestDate;
   });
-  if (cutIndex === -1) return;
-  let filterNew = newTournaments.slice(cutIndex);
-  let result = oldTournaments.concat(filterNew);
+  if (cutIndex === -1) {
+    return;
+  }
+  const filterNew = newTournaments.slice(cutIndex);
+  const result = oldTournaments.concat(filterNew);
   console.log(result.length);
   writeTournamentsJson(result);
 }
@@ -74,8 +79,10 @@ function readExistingTournaments(
     "./data/tournament-summaries/ProcessData/tournaments.json",
     { encoding: "utf8" },
     (error, data) => {
-      if (error) throw error;
-      let oldTournaments: Tournament[] = JSON.parse(data);
+      if (error) {
+        throw error;
+      }
+      const oldTournaments: Tournament[] = JSON.parse(data);
       action(oldTournaments);
     }
   );
@@ -89,11 +96,13 @@ function readTournamentSummary(
     `./data/tournament-summaries/${fileName}.eml`,
     { encoding: "utf8" },
     (error, data) => {
-      if (error) throw error;
-      let tournamentStringArray = data.split("\nPokerStars Tournament");
+      if (error) {
+        throw error;
+      }
+      const tournamentStringArray = data.split("\nPokerStars Tournament");
       tournamentStringArray.shift();
-      let tournaments = tournamentStringArray.map<Tournament>(
-        tournamentInfo => {
+      const tournaments = tournamentStringArray.map<Tournament>(
+        (tournamentInfo) => {
           return {
             tournamentId: getTournamentId(tournamentInfo),
             start: getSartDate(tournamentInfo),
@@ -111,21 +120,27 @@ function readTournamentSummary(
 }
 
 function getRebuyAddon(tournamentInfo: string): number[] | null {
-  let matchRebuy = tournamentInfo.match(/(\d+\srebuy)/g);
-  let matchAddon = tournamentInfo.match(/(\d+\saddon)/g);
-  let rebuy = parsingNumberFromMatchString(matchRebuy);
-  let addon = parsingNumberFromMatchString(matchAddon);
-  if (rebuy && addon) return [rebuy, addon];
-  if (rebuy || addon) throw new Error("this is not consider");
+  const matchRebuy = tournamentInfo.match(/(\d+\srebuy)/g);
+  const matchAddon = tournamentInfo.match(/(\d+\saddon)/g);
+  const rebuy = parsingNumberFromMatchString(matchRebuy);
+  const addon = parsingNumberFromMatchString(matchAddon);
+  if (rebuy && addon) {
+    return [rebuy, addon];
+  }
+  if (rebuy || addon) {
+    throw new Error("this is not consider");
+  }
   return null;
 }
 
 function getPlayers(tournamentInfo: string): Player[] {
-  let result: Player[] = [];
-  let contentArray = tournamentInfo.split("\n");
+  const result: Player[] = [];
+  const contentArray = tournamentInfo.split("\n");
   contentArray.forEach((playerInfo, index, array) => {
-    if (!/\s+\d+:\s/.test(playerInfo)) return;
-    let player: Player = {
+    if (!/\s+\d+:\s/.test(playerInfo)) {
+      return;
+    }
+    const player: Player = {
       position: getPlayerPosition(playerInfo),
       name: getPlayerName(playerInfo),
       country: getPlayerCountry(playerInfo),
@@ -141,21 +156,30 @@ function getPlayerPrize(
   index: number,
   playersInfoOfTournament: string[]
 ): number | string {
-  if (/=20/g.test(playerInfo)) return 0;
-  let prizeString = playerInfo.replace(/.+\),\s/g, "");
-  let match = matchCurrency(prizeString);
-  if (match !== null) return parseDollars(match[0]);
-  let matchTargetTournament = prizeString.match(/\(qualified/g);
-  if (matchTargetTournament !== null) return "target-tournament";
-  if (prizeString.match(/still playing/g))
+  if (/=20/g.test(playerInfo)) {
+    return 0;
+  }
+  const prizeString = playerInfo.replace(/.+\),\s/g, "");
+  const match = matchCurrency(prizeString);
+  if (match !== null) {
+    return parseDollars(match[0]);
+  }
+  const matchTargetTournament = prizeString.match(/\(qualified/g);
+  if (matchTargetTournament !== null) {
+    return "target-tournament";
+  }
+  if (prizeString.match(/still playing/g)) {
     return "still-playing-when-info-was-send";
+  }
   if (prizeString.match(/=\r/g)) {
-    let matchPrize = matchCurrency(
+    const matchPrize = matchCurrency(
       (
         prizeString.replace("\r", "") + playersInfoOfTournament[index + 1]
       ).replace("=", "")
     );
-    if (matchPrize) return parseDollars(matchPrize[0]);
+    if (matchPrize) {
+      return parseDollars(matchPrize[0]);
+    }
     console.log(playerInfo);
     throw new Error("not account for this player info");
   }
@@ -175,37 +199,46 @@ function getPlayerName(playerInfo: string) {
 }
 
 function getPlayerPosition(playerInfo: string): number {
-  let match = playerInfo.match(/\s+\d+:\s/);
-  let result = parsingNumberFromMatchString(match);
-  if (!result) return -1;
+  const match = playerInfo.match(/\s+\d+:\s/);
+  const result = parsingNumberFromMatchString(match);
+  if (!result) {
+    return -1;
+  }
   return result;
 }
 
 function getSartDate(tournamentInfo: string): Date {
-  let string = tournamentInfo
+  const stringDate = tournamentInfo
     .split("\nTournament started ")[1]
     .split("\n")[0]
     .replace(/[ET]/g, "");
-  return getPokerStarsDate(string);
+  return getPokerStarsDate(stringDate);
 }
 
 function getEndDate(tournamentInfo: string): Date | null {
-  let key = "\nTournament finished ";
-  if (!tournamentInfo.includes(key)) return null;
-  let string = tournamentInfo
+  const key = "\nTournament finished ";
+  if (!tournamentInfo.includes(key)) {
+    return null;
+  }
+  const stringDate = tournamentInfo
     .split(key)[1]
     .split("\n")[0]
     .replace(/[ET]/g, "");
-  return getPokerStarsDate(string);
+  return getPokerStarsDate(stringDate);
 }
 
 function getTournamentId(tournamentInfo: string): number {
-  let result = Number.parseInt(tournamentInfo.split(" #")[1].split(",")[0]);
+  const result = Number.parseInt(
+    tournamentInfo.split(" #")[1].split(",")[0],
+    10
+  );
   return checkIfNumber(result);
 }
 
 function getBuyIn(tournamentInfo: string): number[] {
-  if (/Freeroll/g.test(tournamentInfo)) return [0, 0];
+  if (/Freeroll/g.test(tournamentInfo)) {
+    return [0, 0];
+  }
   let paidMinusTaken = 0;
   let taken = 0;
   tournamentInfo
@@ -214,15 +247,18 @@ function getBuyIn(tournamentInfo: string): number[] {
     .replace(/[$]/g, "")
     .split("/")
     .forEach((element, index) => {
-      if (index == 0) paidMinusTaken = Number.parseFloat(element);
-      else taken = Number.parseFloat(element);
+      if (index === 0) {
+        paidMinusTaken = Number.parseFloat(element);
+      } else {
+        taken = Number.parseFloat(element);
+      }
     });
   return [checkIfNumber(paidMinusTaken), checkIfNumber(taken)];
 }
 
 function getPrizePool(tournamentInfo: string): number | string {
   if (tournamentInfo.split("\nTotal Prize Pool: ")[1]) {
-    let result = Number.parseFloat(
+    const result = Number.parseFloat(
       tournamentInfo
         .split("\nTotal Prize Pool: ")[1]
         .split(" ")[0]
@@ -230,8 +266,10 @@ function getPrizePool(tournamentInfo: string): number | string {
     );
     return checkIfNumber(result);
   }
-  let matchTargetTournament = tournamentInfo.match(/Target\sTournament\s#\d+/g);
-  let matchNumberTickets = tournamentInfo.match(/\d+\stickets/g);
+  const matchTargetTournament = tournamentInfo.match(
+    /Target\sTournament\s#\d+/g
+  );
+  const matchNumberTickets = tournamentInfo.match(/\d+\stickets/g);
   if (matchNumberTickets !== null && matchTargetTournament !== null) {
     return (
       matchTargetTournament[0].replace(/[^\d]/g, "") +
@@ -239,11 +277,12 @@ function getPrizePool(tournamentInfo: string): number | string {
       matchNumberTickets[0].replace(/\s/g, "-")
     );
   }
-  let playerArray = getPlayers(tournamentInfo);
+  const playerArray = getPlayers(tournamentInfo);
   let totalPrize: number = 0;
-  playerArray.forEach(player => {
-    if (typeof player.prize !== "number")
+  playerArray.forEach((player) => {
+    if (typeof player.prize !== "number") {
       throw new Error("prize is not a number");
+    }
     totalPrize += player.prize;
   });
   return totalPrize;

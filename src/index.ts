@@ -1,9 +1,9 @@
-import {
+/*import {
   addTournaments,
   existingTournaments$
-} from "./tournament/process-email";
+} from "./tournament/process-email";*/
 import * as fs from "fs";
-import { NotANumberError } from "./models/not-a-number-error";
+/*import { NotANumberError } from "./models/not-a-number-error";
 import {
   parsingNumberFromMatchString,
   getPokerStarsDate,
@@ -14,14 +14,19 @@ import { RomanNumeral } from "./hand/roman-numeral";
 import { Player } from "./hand/models/player";
 import { Suit } from "./hand/models/suit";
 import { Card } from "./hand/models/card";
-import { platform } from "os";
+import { platform } from "os";*/
 
-//addTournaments("agosto")
+// addTournaments("agosto")
 /*existingTournaments$().subscribe(data => data.forEach(tournament=>{
   console.log(tournament.tournamentId)
 }));*/
 
-fs.readFile(
+const readStream = fs.createReadStream(
+  "./data/tournament-summaries/ProcessData/tournaments.json",
+  { encoding: "utf8" }
+);
+
+/*fs.readFile(
   "./data/hand-history/Hands_26.12.18_5.5.19.txt",
   {
     encoding: "utf8"
@@ -264,3 +269,4 @@ function getHandId(handData: string): number {
   if (!result) throw new Error("id didn't match");
   return result;
 }
+*/

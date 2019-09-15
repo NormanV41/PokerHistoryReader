@@ -1,9 +1,9 @@
-/*import {
+import {
   addTournaments,
   existingTournaments$
-} from "./tournament/process-email";*/
+} from "./tournament/process-email";
 import * as fs from "fs";
-/*import { NotANumberError } from "./models/not-a-number-error";
+import { NotANumberError } from "./models/not-a-number-error";
 import {
   parsingNumberFromMatchString,
   getPokerStarsDate,
@@ -11,38 +11,35 @@ import {
   parseDollars
 } from "./methods";
 import { RomanNumeral } from "./hand/roman-numeral";
-import { Player } from "./hand/models/player";
+import { IPlayer } from "./hand/models/player";
 import { Suit } from "./hand/models/suit";
 import { Card } from "./hand/models/card";
-import { platform } from "os";*/
+import { platform } from "os";
 
-// addTournaments("agosto")
+// addTournaments("septiembre_1");
 /*existingTournaments$().subscribe(data => data.forEach(tournament=>{
   console.log(tournament.tournamentId)
 }));*/
 
-const readStream = fs.createReadStream(
-  "./data/tournament-summaries/ProcessData/tournaments.json",
-  { encoding: "utf8" }
-);
-
-/*fs.readFile(
+fs.readFile(
   "./data/hand-history/Hands_26.12.18_5.5.19.txt",
   {
     encoding: "utf8"
   },
   (error, data) => {
-    if (error) throw error;
-    let handStringArray = data.split(/\nHand\s\#/g);
+    if (error) {
+      throw error;
+    }
+    const handStringArray = data.split(/\nHand\s\#/g);
     handStringArray.shift();
-    handStringArray.forEach(handData => {
-      let players = getPlayers(handData);
-      let playersNames = players.map<string>(player => player.name);
-      let preflopAction = getPreflopAction(handData);
+    handStringArray.forEach((handData) => {
+      const players = getPlayers(handData);
+      const playersNames = players.map<string>((player) => player.name);
+      const preflopAction = getPreflopAction(handData);
       preflopAction
         .split("\n")
-        .filter(action => !/(?<=NormanV41\s\[).+(?=\])/g.test(action))
-        .forEach(action => {
+        .filter((action) => !/(?<=NormanV41\s\[).+(?=\])/g.test(action))
+        .forEach((action) => {
           let seat: number | null = null;
           let processAction: string | null = null;
           let amount: number | null = null;
@@ -62,17 +59,10 @@ const readStream = fs.createReadStream(
               if (/:\sfolds/g.test(action)) {
                 processAction = "folds";
                 amount = 0;
+                raiseToAmount = 0;
               }
               if (/:\sraises\s/g.test(action)) {
-                processAction = "raises";
-                let matchAmount = action.match(
-                  /(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)(?=\sto\s)/g
-                );
-                if (!matchAmount) {
-                  console.log(action);
-                  throw new Error("does not match amount");
-                }
-                let amount = parseDollars(matchAmount[0]);
+                ({ amount, raiseToAmount } = getRaiseAction(action));
               }
               if (processAction === null) {
                 console.log(action);
@@ -115,28 +105,63 @@ const readStream = fs.createReadStream(
             console.log(action);
             throw new Error("something unexpected");
           }
+          if (
+            seat === null ||
+            processAction === null ||
+            amount === null ||
+            raiseToAmount === null
+          ) {
+            console.log(seat);
+            console.log(processAction);
+            console.log(amount);
+            console.log(raiseToAmount);
+            throw new Error("a value is null");
+          }
         });
     });
   }
 );
 
+function getRaiseAction(action: string) {
+  const matchAmount = action.match(
+    /(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)(?=\sto\s)/g
+  );
+  const matchRaiseToAmount = action.match(
+    /(?<=\sto\s)(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)/g
+  );
+  if (!matchAmount || !matchRaiseToAmount) {
+    console.log(action);
+    throw new Error("does not match amount");
+  }
+  return {
+    action: "raises",
+    amount: parseDollars(matchAmount[0]),
+    raiseToAmount: parseDollars(matchRaiseToAmount[0])
+  };
+}
+
 function getDealtHandObject(handData: string) {
   const dealtHandString = getDealtHandString(handData);
-  if (!dealtHandString) return null;
-  let cardsString = dealtHandString.split(" ");
+  if (!dealtHandString) {
+    return null;
+  }
+  const cardsString = dealtHandString.split(" ");
   if (cardsString.length !== 2 && cardsString.length !== 4) {
     console.log(handData);
     console.log(dealtHandString);
     throw new Error("is not length 2 or 4");
   }
-  return cardsString.map<Card>(card => new Card(card));
+  return cardsString.map<Card>((card) => new Card(card));
 }
 
 function getDealtHandString(handData: string) {
-  let match = getPreflopAction(handData).match(/(?<=NormanV41\s\[).+(?=\])/g);
-  if (match) return match[0];
-  if (/NormanV41 will be allowed to play after the button/g.test(handData))
+  const match = getPreflopAction(handData).match(/(?<=NormanV41\s\[).+(?=\])/g);
+  if (match) {
+    return match[0];
+  }
+  if (/NormanV41 will be allowed to play after the button/g.test(handData)) {
     return null;
+  }
   console.log(getPreflopAction(handData));
   throw new Error("didn't match dealt hands");
 }
@@ -149,24 +174,28 @@ function getPreflopAction(handData: string) {
 }
 
 function getAnte(handData: string) {
-  let match = handData.match(/(?<=\sposts\sthe\sante\s)\d+/);
-  let ante = parsingNumberFromMatchString(match);
-  if (ante) return ante;
+  const match = handData.match(/(?<=\sposts\sthe\sante\s)\d+/);
+  const ante = parsingNumberFromMatchString(match);
+  if (ante) {
+    return ante;
+  }
   return 0;
 }
 
-function getPlayers(handData: string): Player[] {
+function getPlayers(handData: string): IPlayer[] {
   let isAfterSummary = false;
   return handData
     .split("\n")
-    .filter(newLine => {
+    .filter((newLine) => {
       if (/\*+\sSUMMARY.+/g.test(newLine)) {
         isAfterSummary = true;
       }
-      if (isAfterSummary) return false;
+      if (isAfterSummary) {
+        return false;
+      }
       return /Seat\s\d{1,2}:\s/g.test(newLine);
     })
-    .map<Player>(playerData => {
+    .map<IPlayer>((playerData) => {
       return {
         name: getPlayerName(playerData),
         seat: getPlayerSeat(playerData),
@@ -177,15 +206,19 @@ function getPlayers(handData: string): Player[] {
 
 function getPlayerStack(playerData: string) {
   let match = playerData.match(/(?<=\s\()(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)/g);
-  if (match) return parseDollars(match[0]);
+  if (match) {
+    return parseDollars(match[0]);
+  }
   match = playerData.match(/(?<=\s\()\d+/g);
-  let stack = parsingNumberFromMatchString(match);
-  if (stack) return stack;
+  const stack = parsingNumberFromMatchString(match);
+  if (stack) {
+    return stack;
+  }
   throw new Error("didn't find the stack");
 }
 
 function getPlayerName(playerData: string): string {
-  let match = playerData
+  const match = playerData
     .replace(/Seat\s\d{1,2}:\s/g, "")
     .match(/.+(?=\s\(\$?\d)/g);
   if (!match) {
@@ -196,36 +229,44 @@ function getPlayerName(playerData: string): string {
 }
 
 function getTableId(handData: string): number | string {
-  let match = handData.match(
+  const match = handData.match(
     /(?<=Table\s'\d{6,}\s)\d|(?<=Table\s')[A-Z][a-z]+/g
   );
   if (!match) {
     console.log(handData.slice(0, 500));
     throw new Error("didnt match table id");
   }
-  let matchElement = match[0];
-  let tryNumber = Number.parseInt(matchElement);
-  if (Number.isNaN(tryNumber)) return matchElement;
+  const matchElement = match[0];
+  const tryNumber = Number.parseInt(matchElement, 10);
+  if (Number.isNaN(tryNumber)) {
+    return matchElement;
+  }
   return tryNumber;
 }
 
 function whichSeatIsButton(handData: string): number {
-  let match = handData.match(/(?<=Seat\s#)\d{1,2}(?=\sis\sthe\sbutton)/g);
-  let result = parsingNumberFromMatchString(match);
-  if (!result) throw new Error("is not a number");
+  const match = handData.match(/(?<=Seat\s#)\d{1,2}(?=\sis\sthe\sbutton)/g);
+  const result = parsingNumberFromMatchString(match);
+  if (!result) {
+    throw new Error("is not a number");
+  }
   return result;
 }
 
 function getPlayerSeat(playerData: string): number {
-  let match = playerData.match(/(?<=Seat\s)\d{1,2}(?=:\s)/g);
-  let result = parsingNumberFromMatchString(match);
-  if (!result) throw new Error("no match for number");
+  const match = playerData.match(/(?<=Seat\s)\d{1,2}(?=:\s)/g);
+  const result = parsingNumberFromMatchString(match);
+  if (!result) {
+    throw new Error("no match for number");
+  }
   return result;
 }
 
 function getLevel(handData: string): number | null {
-  if (!isTournament(handData)) return null;
-  let match = handData.match(/(?<=\sLevel\s)[A-Z]+/g);
+  if (!isTournament(handData)) {
+    return null;
+  }
+  const match = handData.match(/(?<=\sLevel\s)[A-Z]+/g);
   if (!match) {
     console.log(handData.slice(0, 500));
     throw new Error("didnt match level roman number");
@@ -234,39 +275,44 @@ function getLevel(handData: string): number | null {
 }
 
 function getSmallBigBlind(handData: string): number[] {
-  let match = handData.match(
+  const match = handData.match(
     /((?<=Limit\s\().+(?=\)))|((?<=Level\s[A-Z]+\s\().+(?=\)))/g
   );
   if (!match) {
     console.log(handData.slice(0, 500));
     throw new Error("didnt match level small and big blind");
   }
-  let smallBigArray = match[0].split("/");
-  let smallBlind = Number.parseFloat(smallBigArray[0].replace(/\$/g, ""));
-  let bigBlind = Number.parseFloat(smallBigArray[1].replace(/\$/g, ""));
+  const smallBigArray = match[0].split("/");
+  const smallBlind = Number.parseFloat(smallBigArray[0].replace(/\$/g, ""));
+  const bigBlind = Number.parseFloat(smallBigArray[1].replace(/\$/g, ""));
   return [checkIfNumber(smallBlind), checkIfNumber(bigBlind)];
 }
 
 function getDate(handData: string) {
-  let match = handData.match(/\d{4}\/\d{2}\/\d{2}\s\d{1,2}:\d{2}:\d{2}/g);
-  if (!match) throw new Error("didn't match date");
+  const match = handData.match(/\d{4}\/\d{2}\/\d{2}\s\d{1,2}:\d{2}:\d{2}/g);
+  if (!match) {
+    throw new Error("didn't match date");
+  }
   return getPokerStarsDate(match[0]);
 }
 
 function isTournament(handData: string): boolean {
-  if (getTournamentId(handData)) return true;
+  if (getTournamentId(handData)) {
+    return true;
+  }
   return false;
 }
 
 function getTournamentId(handData: string) {
-  let idMatch = handData.match(/(?<=Tournament\s#)\d{6,}/g);
+  const idMatch = handData.match(/(?<=Tournament\s#)\d{6,}/g);
   return parsingNumberFromMatchString(idMatch);
 }
 
 function getHandId(handData: string): number {
-  let idMatch = handData.match(/(?<=Hand\s#)\d{6,}/g);
-  let result = parsingNumberFromMatchString(idMatch);
-  if (!result) throw new Error("id didn't match");
+  const idMatch = handData.match(/(?<=Hand\s#)\d{6,}/g);
+  const result = parsingNumberFromMatchString(idMatch);
+  if (!result) {
+    throw new Error("id didn't match");
+  }
   return result;
 }
-*/

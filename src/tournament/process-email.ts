@@ -1,6 +1,6 @@
 import * as fs from "fs";
-import { Player } from "./models/player";
-import { Tournament } from "./models/tournament";
+import { IPlayer } from "./models/player";
+import { ITournament } from "./models/tournament";
 import { bindCallback } from "rxjs";
 import { map } from "rxjs/operators";
 import {
@@ -15,7 +15,7 @@ import {
 const newTournaments$ = bindCallback(readTournamentSummary);
 export let existingTournaments$ = bindCallback(readExistingTournaments);
 
-function writeTournamentsJson(tournaments: Tournament[]) {
+function writeTournamentsJson(tournaments: ITournament[]) {
   fs.writeFile(
     "./data/tournament-summaries/ProcessData/tournaments.json",
     JSON.stringify(tournaments),
@@ -28,8 +28,8 @@ function writeTournamentsJson(tournaments: Tournament[]) {
 }
 
 export function addTournaments(tournamentsSummaryFileName: string) {
-  let newTournaments: Tournament[] | null = null;
-  let oldTournaments: Tournament[] | null = null;
+  let newTournaments: ITournament[] | null = null;
+  let oldTournaments: ITournament[] | null = null;
   newTournaments$(tournamentsSummaryFileName)
     .pipe(
       map((data) =>
@@ -53,8 +53,8 @@ export function addTournaments(tournamentsSummaryFileName: string) {
 }
 
 function mergingTournaments(
-  newTournaments: Tournament[],
-  oldTournaments: Tournament[]
+  newTournaments: ITournament[],
+  oldTournaments: ITournament[]
 ) {
   const oldGreatestDate = new Date(
     oldTournaments[oldTournaments.length - 1].start
@@ -73,7 +73,7 @@ function mergingTournaments(
 }
 
 function readExistingTournaments(
-  action: (oldTournaments: Tournament[]) => void
+  action: (oldTournaments: ITournament[]) => void
 ) {
   fs.readFile(
     "./data/tournament-summaries/ProcessData/tournaments.json",
@@ -82,7 +82,7 @@ function readExistingTournaments(
       if (error) {
         throw error;
       }
-      const oldTournaments: Tournament[] = JSON.parse(data);
+      const oldTournaments: ITournament[] = JSON.parse(data);
       action(oldTournaments);
     }
   );
@@ -90,7 +90,7 @@ function readExistingTournaments(
 
 function readTournamentSummary(
   fileName: string,
-  action: (tournaments: Tournament[]) => void
+  action: (tournaments: ITournament[]) => void
 ) {
   fs.readFile(
     `./data/tournament-summaries/${fileName}.eml`,
@@ -105,7 +105,7 @@ function readTournamentSummary(
         .filter((tournamentInfo) => {
           return filterOutPlayMoneyTournaments(tournamentInfo);
         })
-        .map<Tournament>((tournamentInfo) => {
+        .map<ITournament>((tournamentInfo) => {
           return {
             tournamentId: getTournamentId(tournamentInfo),
             start: getSartDate(tournamentInfo),
@@ -135,14 +135,14 @@ function getRebuyAddon(tournamentInfo: string): number[] | null {
   return null;
 }
 
-function getPlayers(tournamentInfo: string): Player[] {
-  const result: Player[] = [];
+function getPlayers(tournamentInfo: string): IPlayer[] {
+  const result: IPlayer[] = [];
   const contentArray = tournamentInfo.split("\n");
   contentArray.forEach((playerInfo, index, array) => {
     if (!/\s+\d+:\s/.test(playerInfo)) {
       return;
     }
-    const player: Player = {
+    const player: IPlayer = {
       position: getPlayerPosition(playerInfo),
       name: getPlayerName(playerInfo),
       country: getPlayerCountry(playerInfo),

@@ -2,22 +2,22 @@ import { Suit } from "./suit";
 import { parsingNumberFromMatchString } from "../../methods";
 import { NotANumberError } from "../../models/not-a-number-error";
 
-export interface Card {
+export interface ICard {
   rank: number;
   suit: Suit;
 }
 
-export class Card implements Card {
+export class Card implements ICard {
   rank: number;
   suit: Suit;
 
   constructor(card: string) {
-    let matchRank = card.match(/[2-9]|A|K|Q|J|T/g);
+    const matchRank = card.match(/[2-9]|A|K|Q|J|T/g);
     if (!matchRank) {
       console.log(card);
       throw new Error("didnt match rank");
     }
-    let matchSuit = card.match(/s|d|c|h/g);
+    const matchSuit = card.match(/s|d|c|h/g);
     if (!matchSuit) {
       console.log(card);
       throw new Error("didn't match suit");
@@ -39,7 +39,7 @@ export class Card implements Card {
         throw new Error("didn't match suit");
     }
     try {
-      this.rank = <number>parsingNumberFromMatchString(matchRank);
+      this.rank = parsingNumberFromMatchString(matchRank) as number;
     } catch (error) {
       if (error instanceof NotANumberError) {
         switch (matchRank[0]) {

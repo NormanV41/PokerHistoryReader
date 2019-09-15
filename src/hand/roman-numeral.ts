@@ -24,33 +24,62 @@ export class RomanNumeral {
     "I"
   ];
 
-  constructor(number: string | number) {
-    if (typeof number === "number") {
-      if (number < 1) throw new Error("Must be positive");
-      if (number > 3999) throw new Error("maximum number is 3999");
-      this.num = number;
+  constructor(givenNumber: string | number) {
+    if (typeof givenNumber === "number") {
+      if (givenNumber < 1) {
+        throw new Error("Must be positive");
+      }
+      if (givenNumber > 3999) {
+        throw new Error("maximum number is 3999");
+      }
+      this.num = givenNumber;
       return;
     }
-    if (!number) throw new Error("no empty string");
-    number = number.toUpperCase();
+    if (!givenNumber) {
+      throw new Error("no empty string");
+    }
+    givenNumber = givenNumber.toUpperCase();
     let i = 0;
     let arabic = 0;
-    while (i < number.length) {
-      let letter = number.charAt(i);
-      let n = this.letterToNumber(letter);
-      if (n < 0) throw new Error("Ilegal character");
+    while (i < givenNumber.length) {
+      const letter = givenNumber.charAt(i);
+      const n = this.letterToNumber(letter);
+      if (n < 0) {
+        throw new Error("Ilegal character");
+      }
       i++;
-      if (i === number.length) arabic += n;
-      else {
-        let nextNumber = this.letterToNumber(number.charAt(i));
+      if (i === givenNumber.length) {
+        arabic += n;
+      } else {
+        const nextNumber = this.letterToNumber(givenNumber.charAt(i));
         if (nextNumber > n) {
           arabic += nextNumber - n;
           i++;
-        } else arabic += n;
+        } else {
+          arabic += n;
+        }
       }
     }
-    if (arabic > 3999) throw new Error("number must be less than 3999");
+    if (arabic > 3999) {
+      throw new Error("number must be less than 3999");
+    }
     this.num = arabic;
+  }
+
+  toString(): string {
+    let roman = "";
+    let N = this.num;
+    for (let i = 0; i < this.numbers.length; i++) {
+      while (N >= this.numbers[i]) {
+        roman += this.letters[i];
+        N -= this.numbers[i];
+      }
+    }
+    return roman;
+  }
+
+  toInt() {
+    return this.num;
   }
 
   private letterToNumber(letter: string) {
@@ -72,21 +101,5 @@ export class RomanNumeral {
       default:
         return -1;
     }
-  }
-
-  toString(): string {
-    let roman = "";
-    let N = this.num;
-    for (let i = 0; i < this.numbers.length; i++) {
-      while (N >= this.numbers[i]) {
-        roman += this.letters[i];
-        N -= this.numbers[i];
-      }
-    }
-    return roman;
-  }
-
-  toInt() {
-    return this.num;
   }
 }

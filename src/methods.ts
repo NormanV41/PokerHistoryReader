@@ -5,10 +5,14 @@ import * as timezone from "moment-timezone";
  *          and -1 if date1 is less than date2
  */
 export function comparingDates(date1: Date, date2: Date) {
-  let ms1 = date1.getTime();
-  let ms2 = date2.getTime();
-  if (ms1 > ms2) return 1;
-  if (ms1 == ms2) return 0;
+  const ms1 = date1.getTime();
+  const ms2 = date2.getTime();
+  if (ms1 > ms2) {
+    return 1;
+  }
+  if (ms1 === ms2) {
+    return 0;
+  }
   return -1;
 }
 
@@ -17,7 +21,7 @@ export function matchCurrency(test: string) {
 }
 
 export function parseDollars(money: string): number {
-  let result = Number.parseFloat(money.replace(/[\,\$]/g, ""));
+  const result = Number.parseFloat(money.replace(/[\,\$]/g, ""));
   return checkIfNumber(result);
 }
 
@@ -27,9 +31,11 @@ export function getPokerStarsDate(dateStringWithOutEt: string): Date {
     .toDate();
 }
 
-export function checkIfNumber(number: number) {
-  if (Number.isNaN(number)) throw new NotANumberError();
-  return number;
+export function checkIfNumber(n: number) {
+  if (Number.isNaN(n)) {
+    throw new NotANumberError();
+  }
+  return n;
 }
 
 export function parsingNumberFromMatchString(
@@ -40,9 +46,7 @@ export function parsingNumberFromMatchString(
     return null;
   }
   if (!isFloat) {
-    let id = Number.parseInt(match[0]);
-    return checkIfNumber(id);
+    return checkIfNumber(Number.parseInt(match[0], 10));
   }
-  let id = Number.parseFloat(match[0]);
-  return checkIfNumber(id);
+  return checkIfNumber(Number.parseFloat(match[0]));
 }

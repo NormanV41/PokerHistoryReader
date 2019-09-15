@@ -101,8 +101,11 @@ function readTournamentSummary(
       }
       const tournamentStringArray = data.split("\nPokerStars Tournament");
       tournamentStringArray.shift();
-      const tournaments = tournamentStringArray.map<Tournament>(
-        (tournamentInfo) => {
+      const tournaments = tournamentStringArray
+        .filter((tournamentInfo) => {
+          return filterOutPlayMoneyTournaments(tournamentInfo);
+        })
+        .map<Tournament>((tournamentInfo) => {
           return {
             tournamentId: getTournamentId(tournamentInfo),
             start: getSartDate(tournamentInfo),
@@ -112,8 +115,7 @@ function readTournamentSummary(
             players: getPlayers(tournamentInfo),
             rebuyAddon: getRebuyAddon(tournamentInfo)
           };
-        }
-      );
+        });
       action(tournaments);
     }
   );
@@ -241,18 +243,29 @@ function getBuyIn(tournamentInfo: string): number[] {
   }
   let paidMinusTaken = 0;
   let taken = 0;
-  tournamentInfo
-    .split("\nBuy-In: ")[1]
-    .split(" ")[0]
-    .replace(/[$]/g, "")
-    .split("/")
-    .forEach((element, index) => {
-      if (index === 0) {
-        paidMinusTaken = Number.parseFloat(element);
-      } else {
-        taken = Number.parseFloat(element);
-      }
-    });
+  const match = tournamentInfo.match(
+    /(?<=(Buy-In:\s)|(\/))(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)/g
+  );
+  if (!match) {
+    const matchPlayMoney = tournamentInfo.match(/(?<=(Buy-In:\s)|(\/))(\d+)/g);
+    if (matchPlayMoney) {
+      throw new Error("not accepting play money");
+    }
+    console.log(tournamentInfo);
+    throw new Error("not matching expected buy-in");
+  }
+  if (match.length > 2) {
+    console.log(tournamentInfo);
+    console.log(match);
+    throw new Error("not matching expected buy-in");
+  }
+  match.forEach((element, index) => {
+    if (index === 0) {
+      paidMinusTaken = parseDollars(element);
+    } else {
+      taken = parseDollars(element);
+    }
+  });
   return [checkIfNumber(paidMinusTaken), checkIfNumber(taken)];
 }
 
@@ -286,4 +299,16 @@ function getPrizePool(tournamentInfo: string): number | string {
     totalPrize += player.prize;
   });
   return totalPrize;
+}
+
+function filterOutPlayMoneyTournaments(tournamentInfo: string) {
+  try {
+    getBuyIn(tournamentInfo);
+    return true;
+  } catch (error) {
+    if (error.message === "not accepting play money") {
+      return false;
+    }
+    throw error;
+  }
 }

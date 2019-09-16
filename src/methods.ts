@@ -25,6 +25,18 @@ export function parseDollars(money: string): number {
   return checkIfNumber(result);
 }
 
+export function generalParseDollars(test: string) {
+  const match = matchCurrency(test);
+  if (!match) {
+    console.log(test);
+    throw new Error("doen't match currency");
+  }
+  if (match.length > 1) {
+    throw new Error("method not implemented for more than one match");
+  }
+  return parseDollars(match[0]);
+}
+
 export function getPokerStarsDate(dateStringWithOutEt: string): Date {
   return timezone
     .tz(dateStringWithOutEt, "YYYY/MM/DD HH:mm:ss", "America/New_York")

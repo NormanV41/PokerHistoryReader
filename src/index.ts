@@ -8,7 +8,9 @@ import {
   parsingNumberFromMatchString,
   getPokerStarsDate,
   checkIfNumber,
-  parseDollars
+  parseDollars,
+  matchCurrency,
+  generalParseDollars
 } from "./methods";
 import { RomanNumeral } from "./hand/roman-numeral";
 import { IPlayer } from "./hand/models/player";
@@ -40,10 +42,10 @@ fs.readFile(
         .split("\n")
         .filter((action) => !/(?<=NormanV41\s\[).+(?=\])/g.test(action))
         .forEach((action) => {
-          let seat: number | null = null;
-          let processAction: string | null = null;
-          let amount: number | null = null;
-          let raiseToAmount: number | null = null;
+          let seat: number | undefined;
+          let processAction: string | undefined;
+          let amount: number | undefined | null;
+          let raiseToAmount: number | undefined | null;
           if (
             /(\swins\s)(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)\sfor\seliminating\s/g.test(
               action
@@ -58,13 +60,23 @@ fs.readFile(
               seat = players[index].seat;
               if (/:\sfolds/g.test(action)) {
                 processAction = "folds";
-                amount = 0;
-                raiseToAmount = 0;
+                amount = null;
+                raiseToAmount = null;
               }
               if (/:\sraises\s/g.test(action)) {
-                ({ amount, raiseToAmount } = getRaiseAction(action));
+                ({ processAction, amount, raiseToAmount } = getRaiseAction(
+                  action
+                ));
               }
-              if (processAction === null) {
+              if (/:\scalls\s/g.test(action)) {
+                processAction = "calls";
+                amount = generalParseDollars(action);
+                raiseToAmount = null;
+              }
+              if (/Uncalled bet \(/g.test(action)) {
+                processAction = "bet returned";
+              }
+              if (processAction === undefined) {
                 console.log(action);
                 throw new Error("action not handled");
               }
@@ -106,16 +118,16 @@ fs.readFile(
             throw new Error("something unexpected");
           }
           if (
-            seat === null ||
-            processAction === null ||
-            amount === null ||
-            raiseToAmount === null
+            seat === undefined ||
+            processAction === undefined ||
+            amount === undefined ||
+            raiseToAmount === undefined
           ) {
             console.log(seat);
             console.log(processAction);
             console.log(amount);
             console.log(raiseToAmount);
-            throw new Error("a value is null");
+            throw new Error("a value is undefined");
           }
         });
     });
@@ -134,7 +146,7 @@ function getRaiseAction(action: string) {
     throw new Error("does not match amount");
   }
   return {
-    action: "raises",
+    processAction: "raises",
     amount: parseDollars(matchAmount[0]),
     raiseToAmount: parseDollars(matchRaiseToAmount[0])
   };

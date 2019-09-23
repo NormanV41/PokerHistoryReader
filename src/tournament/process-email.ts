@@ -13,7 +13,7 @@ import {
 } from "../methods";
 
 const newTournaments$ = bindCallback(readTournamentSummary);
-export let existingTournaments$ = bindCallback(readExistingTournaments);
+export const existingTournaments$ = bindCallback(readExistingTournaments);
 
 function writeTournamentsJson(tournaments: ITournament[]) {
   fs.writeFile(

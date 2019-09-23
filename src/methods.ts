@@ -1,5 +1,7 @@
 import { NotANumberError } from "./models/not-a-number-error";
 import * as timezone from "moment-timezone";
+import { NoMatchError } from "./models/no-match-error";
+import { access } from "fs";
 /**
  * @returns 1 if date1 is greater than date2, 0 if they are equal,
  *          and -1 if date1 is less than date2
@@ -17,7 +19,7 @@ export function comparingDates(date1: Date, date2: Date) {
 }
 
 export function matchCurrency(test: string) {
-  return test.match(/\$(\d{1,3}(\,\d{3})*)(\.\d{2})?/g);
+  return test.match(/(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)(?!\d+)/g);
 }
 
 export function parseDollars(money: string): number {
@@ -28,13 +30,26 @@ export function parseDollars(money: string): number {
 export function generalParseDollars(test: string) {
   const match = matchCurrency(test);
   if (!match) {
-    console.log(test);
-    throw new Error("doen't match currency");
+    throw new Error("doesn't match currency");
   }
   if (match.length > 1) {
+    console.log(test);
     throw new Error("method not implemented for more than one match");
   }
   return parseDollars(match[0]);
+}
+
+export function generalParseChips(test: string) {
+  const match = test.match(/(\s\d{1,}(?![^\s]))|(\(\d{1,}\))/g);
+  if (match) {
+    if (match.length > 1) {
+      console.log(test);
+      throw new Error("should only be one match");
+    }
+    return checkIfNumber(Number.parseInt(match[0].replace(/\(|\)/g, ""), 10));
+  }
+  console.log(test);
+  throw new Error("didn't match");
 }
 
 export function getPokerStarsDate(dateStringWithOutEt: string): Date {
@@ -61,4 +76,20 @@ export function parsingNumberFromMatchString(
     return checkIfNumber(Number.parseInt(match[0], 10));
   }
   return checkIfNumber(Number.parseFloat(match[0]));
+}
+
+export function testMatch<T>(
+  match: RegExpMatchArray | null,
+  action: (match: RegExpMatchArray) => T
+) {
+  if (!match) {
+    throw new NoMatchError();
+  }
+  return action(match);
+}
+
+export function checkForOnlyOneMatch(match: RegExpMatchArray) {
+  if (match.length > 1) {
+    throw new Error("no more than one match");
+  }
 }

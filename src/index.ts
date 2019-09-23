@@ -10,13 +10,18 @@ import {
   checkIfNumber,
   parseDollars,
   matchCurrency,
-  generalParseDollars
+  generalParseDollars,
+  generalParseChips,
+  testMatch,
+  checkForOnlyOneMatch
 } from "./methods";
 import { RomanNumeral } from "./hand/roman-numeral";
 import { IPlayer } from "./hand/models/player";
 import { Suit } from "./hand/models/suit";
 import { Card } from "./hand/models/card";
 import { platform } from "os";
+import * as rimraf from "rimraf";
+import { NoMatchError } from "./models/no-match-error";
 
 // addTournaments("septiembre_1");
 /*existingTournaments$().subscribe(data => data.forEach(tournament=>{
@@ -42,21 +47,36 @@ fs.readFile(
         .split("\n")
         .filter((action) => !/(?<=NormanV41\s\[).+(?=\])/g.test(action))
         .forEach((action) => {
-          let seat: number | undefined;
+          let seat: number | null | undefined;
           let processAction: string | undefined;
           let amount: number | undefined | null;
           let raiseToAmount: number | undefined | null;
+          let message = "";
+          let nonSeatPlayerName = "";
+          let rebuyChipsReceived: number | null = null;
+          let hand: Card[] | null = null;
+          let eliminatedSeat: number | null = null;
+          let increasedBountyBy: number | null = null;
+          let finalBounty: number | null = null;
           if (
             /(\swins\s)(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)\sfor\seliminating\s/g.test(
               action
             )
           ) {
-            console.log(action);
+            ({
+              processAction,
+              eliminatedSeat,
+              seat,
+              increasedBountyBy,
+              finalBounty,
+              amount
+            } = getWinsBountyAction(action, playersNames));
             return;
           }
           let counter = 0;
           playersNames.forEach((player, index) => {
             if (action.split(player).length > 1) {
+              action = action.replace(player, "");
               seat = players[index].seat;
               if (/:\sfolds/g.test(action)) {
                 processAction = "folds";
@@ -70,11 +90,91 @@ fs.readFile(
               }
               if (/:\scalls\s/g.test(action)) {
                 processAction = "calls";
-                amount = generalParseDollars(action);
+                amount = tryDolarFirstThenChips(action);
                 raiseToAmount = null;
               }
               if (/Uncalled bet \(/g.test(action)) {
                 processAction = "bet returned";
+                raiseToAmount = null;
+                amount = tryDolarFirstThenChips(action);
+              }
+              if (/\scollected\s/g.test(action)) {
+                processAction = "collect pot";
+                raiseToAmount = null;
+                amount = tryDolarFirstThenChips(action);
+              }
+              if (/:\sdoesn't\sshow\shand/g.test(action)) {
+                processAction = "hide hand";
+                raiseToAmount = null;
+                amount = null;
+              }
+              if (/:\schecks/g.test(action)) {
+                processAction = "checks";
+                raiseToAmount = null;
+                amount = null;
+              }
+              if (/\shas\stimed\sout\swhile\sdisconnected/g.test(action)) {
+                processAction = "disconnected and time out";
+                raiseToAmount = null;
+                amount = null;
+              }
+              if (/\ssaid,\s"/g.test(action)) {
+                processAction = "said";
+                message = getMessage(action);
+                amount = null;
+                raiseToAmount = null;
+              }
+              if (/\shas\stimed\sout/g.test(action)) {
+                processAction = "timed out";
+                raiseToAmount = null;
+                amount = null;
+              }
+              if (/ is sitting out/g.test(action)) {
+                processAction = "sitting out";
+                amount = null;
+                raiseToAmount = null;
+              }
+              if (/ has returned/g.test(action)) {
+                processAction = "has returned";
+                amount = null;
+                raiseToAmount = null;
+              }
+              if (/ is connected/g.test(action)) {
+                processAction = "connected";
+                amount = null;
+                raiseToAmount = null;
+              }
+              if (/ re-buys and receives /g.test(action)) {
+                processAction = "rebuys";
+                amount = generalParseDollars(action);
+                rebuyChipsReceived = generalParseChips(action);
+                raiseToAmount = null;
+              }
+              if (/ is disconnected/g.test(action)) {
+                processAction = "disconnected";
+                amount = null;
+                raiseToAmount = null;
+              }
+              if (/ finished the tournament in /g.test(action)) {
+                processAction = "finished tournament";
+                amount = null;
+                raiseToAmount = null;
+              }
+              if (/: shows \[/g.test(action)) {
+                processAction = "shows";
+                hand = getHand(action);
+                amount = null;
+                raiseToAmount = null;
+              }
+              if (/\swins\sthe\stournament/g.test(action)) {
+                processAction = "wins tournament";
+                amount = null;
+                raiseToAmount = null;
+              }
+              if (/ leaves the table/g.test(action)) {
+                processAction = "leaves table";
+                raiseToAmount = null;
+                amount = null;
               }
               if (processAction === undefined) {
                 console.log(action);
@@ -84,28 +184,71 @@ fs.readFile(
             }
           });
           if (/\s\[observer\]\ssaid,/g.test(action)) {
-            console.log(action);
+            processAction = "observer said";
+            amount = null;
+            raiseToAmount = null;
+            seat = null;
+            nonSeatPlayerName = getStringValue(
+              action,
+              /.+(?=\s\[observer\]\s)/g
+            );
+            message = getMessage(action);
             counter++;
           }
           if (/ re-buys and receives /g.test(action) && counter === 0) {
-            console.log(action);
+            seat = null;
+            raiseToAmount = null;
+            processAction = "rebuys";
+            amount = generalParseDollars(action);
+            nonSeatPlayerName = getStringValue(
+              action,
+              /.+(?=\sre-buys\sand\sreceives\s)/g
+            );
             counter++;
           }
           if (/ has returned/g.test(action) && counter === 0) {
-            console.log(action);
+            seat = null;
+            processAction = "has returned";
+            amount = null;
+            raiseToAmount = null;
+            nonSeatPlayerName = getStringValue(
+              action,
+              /.+(?=\shas\sreturned)/g
+            );
             counter++;
           }
           if (/ is sitting out/g.test(action) && counter === 0) {
-            console.log(action);
+            seat = null;
+            processAction = "sitting out";
+            raiseToAmount = null;
+            amount = null;
+            nonSeatPlayerName = getStringValue(
+              action,
+              /.+(?= is sitting out)/g
+            );
             counter++;
           }
           if (/ leaves the table/g.test(action) && counter === 0) {
-            console.log(action);
+            seat = null;
+            processAction = "leaves table";
+            raiseToAmount = null;
+            amount = null;
+            nonSeatPlayerName = getStringValue(
+              action,
+              /.+(?= leaves the table)/g
+            );
             counter++;
           }
 
           if (/ joins the table/g.test(action) && counter === 0) {
-            console.log(action);
+            seat = null;
+            processAction = "joins table";
+            raiseToAmount = null;
+            amount = null;
+            nonSeatPlayerName = getStringValue(
+              action,
+              /.+(?= joins the table)/g
+            );
             counter++;
           }
           if (counter !== 1) {
@@ -129,17 +272,126 @@ fs.readFile(
             console.log(raiseToAmount);
             throw new Error("a value is undefined");
           }
+          if (seat === null && !nonSeatPlayerName) {
+            console.log(action);
+            throw new Error("missing noSeatPlayerName");
+          }
         });
     });
   }
 );
 
+function getWinsBountyAction(action: string, playersNames: string[]) {
+  const processAction = "wins bounty";
+  const playerName = getStringValue(
+    action,
+    /.+(?=\swins\s(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?))/g
+  );
+  const eliminatedPlayerName = getStringValue(
+    action,
+    /(?<=\sfor\seliminating\s).+(?=\sand\stheir\sown)/g
+  );
+  const eliminatedSeat = playersNames.findIndex(
+    (player) => player === eliminatedPlayerName
+  );
+  const seat = playersNames.findIndex((player) => player === playerName);
+  const amount = parseDollars(
+    getStringValue(
+      action,
+      /(?<=\swins\s)(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)(?=\sfor\s)/g
+    )
+  );
+  const increasedBountyBy = parseDollars(
+    getStringValue(
+      action,
+      /(?<=\sincreases\sby\s)(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)(?=\sto\s)/g
+    )
+  );
+  const finalBounty = parseDollars(
+    getStringValue(
+      action,
+      /(?<=(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)\sto\s)(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)/g
+    )
+  );
+  if (seat === -1 || eliminatedSeat === -1) {
+    console.log(action);
+    throw new Error("didn't find seat");
+  }
+  return {
+    processAction,
+    eliminatedSeat,
+    seat,
+    increasedBountyBy,
+    finalBounty,
+    amount
+  };
+}
+
+function getStringValue(action: string, reggex: RegExp) {
+  return testMatch<string>(action.match(reggex), (match: RegExpMatchArray) => {
+    checkForOnlyOneMatch(match);
+    return match[0];
+  });
+}
+
+function getHand(action: string) {
+  return testMatch<Card[]>(
+    action.match(/(?<=\s\[).+(?=\])/g),
+    (match: RegExpMatchArray) => {
+      checkForOnlyOneMatch(match);
+      const hands = match[0].split(" ");
+      return hands.map<Card>((card) => {
+        return new Card(card);
+      });
+    }
+  );
+}
+
+function getMessage(action: string) {
+  try {
+    return testMatch<string>(
+      action.match(/(?<=").+(?=")/g),
+      (match: RegExpMatchArray) => {
+        checkForOnlyOneMatch(match);
+        return match[0];
+      }
+    );
+  } catch (error) {
+    if (error instanceof NoMatchError) {
+      return testMatch<string>(
+        action.match(/""/g),
+        (match: RegExpMatchArray) => {
+          checkForOnlyOneMatch(match);
+          return "";
+        }
+      );
+    }
+    throw error;
+  }
+}
+
+function tryDolarFirstThenChips(action: string) {
+  try {
+    return generalParseDollars(action);
+  } catch (error) {
+    if (error.message === "doesn't match currency") {
+      const result = generalParseChips(action);
+      if (result) {
+        return result;
+      }
+      console.log(action);
+      throw new Error("amount can't be null in this action");
+    }
+    throw error;
+  }
+}
+
 function getRaiseAction(action: string) {
   const matchAmount = action.match(
-    /(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)(?=\sto\s)/g
+    /((\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)|(\d+))(?=\sto\s)/g
   );
   const matchRaiseToAmount = action.match(
-    /(?<=\sto\s)(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)/g
+    /(?<=\sto\s)((\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)|(\d+))/g
   );
   if (!matchAmount || !matchRaiseToAmount) {
     console.log(action);
@@ -328,3 +580,5 @@ function getHandId(handData: string): number {
   }
   return result;
 }
+
+rimraf.sync("./lib/");

@@ -67,8 +67,4 @@ export class Card implements ICard {
       }
     }
   }
-
-  matchCardRank(card: string): string {
-    return "";
-  }
 }

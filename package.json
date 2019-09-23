@@ -28,9 +28,11 @@
   "dependencies": {
     "@types/moment-timezone": "^0.5.12",
     "@types/mysql": "^2.15.6",
+    "@types/rimraf": "^2.0.2",
     "moment": "^2.24.0",
     "moment-timezone": "^0.5.26",
     "mysql": "^2.17.1",
+    "rimraf": "^3.0.0",
     "rxjs": "^6.5.2"
   }
 }

@@ -1,0 +1,23 @@
+export enum ActionDescription {
+  winBounty = "wins bounty",
+  fold = "folds",
+  raise = "raises",
+  call = "calls",
+  returnBet = "bet returned",
+  collectPot = "collect pot",
+  hideHand = "hide hand",
+  check = "checks",
+  disconnectedTimeOut = "disconnected and time out",
+  said = "said",
+  timeOut = "timed out",
+  sittingOut = "sitting out",
+  returned = "has returned",
+  connected = "connected",
+  rebuys = "rebuys",
+  disconnected = "disconnected",
+  finishTournament = "finished tournament",
+  showsHand = "shows hand",
+  winsTournament = "wins tournament",
+  leavesTable = "leaves table",
+  joinsTable = "joins table"
+}

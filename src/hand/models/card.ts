@@ -7,9 +7,9 @@ export interface ICard {
   suit: Suit;
 }
 
-export class Card implements ICard {
-  rank: number;
-  suit: Suit;
+export class Card {
+  private rank: number;
+  private suit: Suit;
 
   constructor(card: string) {
     const matchRank = card.match(/[2-9]|A|K|Q|J|T/g);

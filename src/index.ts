@@ -22,6 +22,9 @@ import { Card } from "./hand/models/card";
 import { platform } from "os";
 import * as rimraf from "rimraf";
 import { NoMatchError } from "./models/no-match-error";
+import { IAction } from "./hand/models/action";
+import { Action } from "rxjs/internal/scheduler/Action";
+import { ActionDescription } from "./hand/models/action-description";
 
 // addTournaments("septiembre_1");
 /*existingTournaments$().subscribe(data => data.forEach(tournament=>{
@@ -40,249 +43,224 @@ fs.readFile(
     const handStringArray = data.split(/\nHand\s\#/g);
     handStringArray.shift();
     handStringArray.forEach((handData) => {
-      const players = getPlayers(handData);
-      const playersNames = players.map<string>((player) => player.name);
-      const preflopAction = getPreflopAction(handData);
-      preflopAction
-        .split("\n")
-        .filter((action) => !/(?<=NormanV41\s\[).+(?=\])/g.test(action))
-        .forEach((action) => {
-          let seat: number | null | undefined;
-          let processAction: string | undefined;
-          let amount: number | undefined | null;
-          let raiseToAmount: number | undefined | null;
-          let message = "";
-          let nonSeatPlayerName = "";
-          let rebuyChipsReceived: number | null = null;
-          let hand: Card[] | null = null;
-          let eliminatedSeat: number | null = null;
-          let increasedBountyBy: number | null = null;
-          let finalBounty: number | null = null;
-          if (
-            /(\swins\s)(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)\sfor\seliminating\s/g.test(
-              action
-            )
-          ) {
-            ({
-              processAction,
-              eliminatedSeat,
-              seat,
-              increasedBountyBy,
-              finalBounty,
-              amount
-            } = getWinsBountyAction(action, playersNames));
-            return;
-          }
-          let counter = 0;
-          playersNames.forEach((player, index) => {
-            if (action.split(player).length > 1) {
-              action = action.replace(player, "");
-              seat = players[index].seat;
-              if (/:\sfolds/g.test(action)) {
-                processAction = "folds";
-                amount = null;
-                raiseToAmount = null;
-              }
-              if (/:\sraises\s/g.test(action)) {
-                ({ processAction, amount, raiseToAmount } = getRaiseAction(
-                  action
-                ));
-              }
-              if (/:\scalls\s/g.test(action)) {
-                processAction = "calls";
-                amount = tryDolarFirstThenChips(action);
-                raiseToAmount = null;
-              }
-              if (/Uncalled bet \(/g.test(action)) {
-                processAction = "bet returned";
-                raiseToAmount = null;
-                amount = tryDolarFirstThenChips(action);
-              }
-              if (/\scollected\s/g.test(action)) {
-                processAction = "collect pot";
-                raiseToAmount = null;
-                amount = tryDolarFirstThenChips(action);
-              }
-              if (/:\sdoesn't\sshow\shand/g.test(action)) {
-                processAction = "hide hand";
-                raiseToAmount = null;
-                amount = null;
-              }
-              if (/:\schecks/g.test(action)) {
-                processAction = "checks";
-                raiseToAmount = null;
-                amount = null;
-              }
-              if (/\shas\stimed\sout\swhile\sdisconnected/g.test(action)) {
-                processAction = "disconnected and time out";
-                raiseToAmount = null;
-                amount = null;
-              }
-              if (/\ssaid,\s"/g.test(action)) {
-                processAction = "said";
-                message = getMessage(action);
-                amount = null;
-                raiseToAmount = null;
-              }
-              if (/\shas\stimed\sout/g.test(action)) {
-                processAction = "timed out";
-                raiseToAmount = null;
-                amount = null;
-              }
-              if (/ is sitting out/g.test(action)) {
-                processAction = "sitting out";
-                amount = null;
-                raiseToAmount = null;
-              }
-              if (/ has returned/g.test(action)) {
-                processAction = "has returned";
-                amount = null;
-                raiseToAmount = null;
-              }
-              if (/ is connected/g.test(action)) {
-                processAction = "connected";
-                amount = null;
-                raiseToAmount = null;
-              }
-              if (/ re-buys and receives /g.test(action)) {
-                processAction = "rebuys";
-                amount = generalParseDollars(action);
-                rebuyChipsReceived = generalParseChips(action);
-                raiseToAmount = null;
-              }
-              if (/ is disconnected/g.test(action)) {
-                processAction = "disconnected";
-                amount = null;
-                raiseToAmount = null;
-              }
-              if (/ finished the tournament in /g.test(action)) {
-                processAction = "finished tournament";
-                amount = null;
-                raiseToAmount = null;
-              }
-              if (/: shows \[/g.test(action)) {
-                processAction = "shows";
-                hand = getHand(action);
-                amount = null;
-                raiseToAmount = null;
-              }
-              if (/\swins\sthe\stournament/g.test(action)) {
-                processAction = "wins tournament";
-                amount = null;
-                raiseToAmount = null;
-              }
-              if (/ leaves the table/g.test(action)) {
-                processAction = "leaves table";
-                raiseToAmount = null;
-                amount = null;
-              }
-              if (processAction === undefined) {
-                console.log(action);
-                throw new Error("action not handled");
-              }
-              counter++;
-            }
-          });
-          if (/\s\[observer\]\ssaid,/g.test(action)) {
-            processAction = "observer said";
-            amount = null;
-            raiseToAmount = null;
-            seat = null;
-            nonSeatPlayerName = getStringValue(
-              action,
-              /.+(?=\s\[observer\]\s)/g
-            );
-            message = getMessage(action);
-            counter++;
-          }
-          if (/ re-buys and receives /g.test(action) && counter === 0) {
-            seat = null;
-            raiseToAmount = null;
-            processAction = "rebuys";
-            amount = generalParseDollars(action);
-            nonSeatPlayerName = getStringValue(
-              action,
-              /.+(?=\sre-buys\sand\sreceives\s)/g
-            );
-            counter++;
-          }
-          if (/ has returned/g.test(action) && counter === 0) {
-            seat = null;
-            processAction = "has returned";
-            amount = null;
-            raiseToAmount = null;
-            nonSeatPlayerName = getStringValue(
-              action,
-              /.+(?=\shas\sreturned)/g
-            );
-            counter++;
-          }
-          if (/ is sitting out/g.test(action) && counter === 0) {
-            seat = null;
-            processAction = "sitting out";
-            raiseToAmount = null;
-            amount = null;
-            nonSeatPlayerName = getStringValue(
-              action,
-              /.+(?= is sitting out)/g
-            );
-            counter++;
-          }
-          if (/ leaves the table/g.test(action) && counter === 0) {
-            seat = null;
-            processAction = "leaves table";
-            raiseToAmount = null;
-            amount = null;
-            nonSeatPlayerName = getStringValue(
-              action,
-              /.+(?= leaves the table)/g
-            );
-            counter++;
-          }
-
-          if (/ joins the table/g.test(action) && counter === 0) {
-            seat = null;
-            processAction = "joins table";
-            raiseToAmount = null;
-            amount = null;
-            nonSeatPlayerName = getStringValue(
-              action,
-              /.+(?= joins the table)/g
-            );
-            counter++;
-          }
-          if (counter !== 1) {
-            console.log(handData);
-            console.log(playersNames);
-            console.log();
-            console.log(preflopAction);
-            console.log(counter);
-            console.log(action);
-            throw new Error("something unexpected");
-          }
-          if (
-            seat === undefined ||
-            processAction === undefined ||
-            amount === undefined ||
-            raiseToAmount === undefined
-          ) {
-            console.log(seat);
-            console.log(processAction);
-            console.log(amount);
-            console.log(raiseToAmount);
-            throw new Error("a value is undefined");
-          }
-          if (seat === null && !nonSeatPlayerName) {
-            console.log(action);
-            throw new Error("missing noSeatPlayerName");
-          }
-        });
+      console.log(getPreflopAction(handData));
     });
   }
 );
 
+function getPreflopAction(handData: string) {
+  const players = getPlayers(handData);
+  const playersNames = players.map<string>((player) => player.name);
+  return getPreflopActionString(handData)
+    .split("\n")
+    .filter((action) => !/(?<=NormanV41\s\[).+(?=\])/g.test(action))
+    .map<IAction>((action) => {
+      return actionStringToActionObject(action, players, playersNames);
+    });
+}
+
+function actionStringToActionObject(
+  action: string,
+  players: IPlayer[],
+  playersNames: string[]
+): IAction {
+  let seat: number | undefined;
+  let description: string | undefined;
+  let amount: number | undefined;
+  let raiseToAmount: number | undefined;
+  let message: string | undefined;
+  let nonSeatPlayerName: string | undefined;
+  let rebuyChipsReceived: number | undefined;
+  let hand: Card[] | undefined;
+  let eliminatedSeat: number | undefined;
+  let increasedBountyBy: number | undefined;
+  let finalBounty: number | undefined;
+  if (
+    /(\swins\s)(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)\sfor\seliminating\s/g.test(
+      action
+    )
+  ) {
+    ({
+      description,
+      eliminatedSeat,
+      seat,
+      increasedBountyBy,
+      finalBounty,
+      amount
+    } = getWinsBountyAction(action, playersNames));
+    const result1 = {
+      seat,
+      description,
+      amount,
+      raiseToAmount,
+      message,
+      nonSeatPlayerName,
+      rebuyChipsReceived,
+      hand,
+      eliminatedSeat,
+      increasedBountyBy,
+      finalBounty
+    };
+    return filterUndefined(result1) as IAction;
+  }
+  let counter = 0;
+  playersNames.forEach((player, index) => {
+    if (action.split(player).length > 1) {
+      action = action.replace(player, "");
+      seat = players[index].seat;
+      if (/:\sfolds/g.test(action)) {
+        description = ActionDescription.fold;
+      }
+      if (/:\sraises\s/g.test(action)) {
+        ({ description, amount, raiseToAmount } = getRaiseAction(action));
+      }
+      if (/:\scalls\s/g.test(action)) {
+        description = ActionDescription.call;
+        amount = tryDolarFirstThenChips(action);
+      }
+      if (/Uncalled bet \(/g.test(action)) {
+        description = ActionDescription.returnBet;
+        amount = tryDolarFirstThenChips(action);
+      }
+      if (/\scollected\s/g.test(action)) {
+        description = ActionDescription.collectPot;
+        amount = tryDolarFirstThenChips(action);
+      }
+      if (/:\sdoesn't\sshow\shand/g.test(action)) {
+        description = ActionDescription.hideHand;
+      }
+      if (/:\schecks/g.test(action)) {
+        description = ActionDescription.check;
+      }
+      if (/\shas\stimed\sout\swhile\sdisconnected/g.test(action)) {
+        description = ActionDescription.disconnectedTimeOut;
+      }
+      if (/\ssaid,\s"/g.test(action)) {
+        description = ActionDescription.said;
+        message = getMessage(action);
+      }
+      if (/\shas\stimed\sout/g.test(action)) {
+        description = ActionDescription.timeOut;
+      }
+      if (/ is sitting out/g.test(action)) {
+        description = ActionDescription.sittingOut;
+      }
+      if (/ has returned/g.test(action)) {
+        description = ActionDescription.returned;
+      }
+      if (/ is connected/g.test(action)) {
+        description = ActionDescription.connected;
+      }
+      if (/ re-buys and receives /g.test(action)) {
+        description = ActionDescription.rebuys;
+        amount = generalParseDollars(action);
+        rebuyChipsReceived = generalParseChips(action);
+      }
+      if (/ is disconnected/g.test(action)) {
+        description = ActionDescription.disconnected;
+      }
+      if (/ finished the tournament in /g.test(action)) {
+        description = ActionDescription.finishTournament;
+      }
+      if (/: shows \[/g.test(action)) {
+        description = ActionDescription.showsHand;
+        hand = getHand(action);
+      }
+      if (/\swins\sthe\stournament/g.test(action)) {
+        description = ActionDescription.winsTournament;
+      }
+      if (/ leaves the table/g.test(action)) {
+        description = ActionDescription.leavesTable;
+      }
+      if (description === undefined) {
+        console.log(action);
+        throw new Error("action not handled");
+      }
+      counter++;
+    }
+  });
+  if (/\s\[observer\]\ssaid,/g.test(action)) {
+    description = ActionDescription.said;
+    nonSeatPlayerName = getStringValue(action, /.+(?=\s\[observer\]\s)/g);
+    message = getMessage(action);
+    counter++;
+  }
+  if (/ re-buys and receives /g.test(action) && counter === 0) {
+    description = ActionDescription.rebuys;
+    amount = generalParseDollars(action);
+    nonSeatPlayerName = getStringValue(
+      action,
+      /.+(?=\sre-buys\sand\sreceives\s)/g
+    );
+    counter++;
+  }
+  if (/ has returned/g.test(action) && counter === 0) {
+    description = ActionDescription.returned;
+    nonSeatPlayerName = getStringValue(action, /.+(?=\shas\sreturned)/g);
+    counter++;
+  }
+  if (/ is sitting out/g.test(action) && counter === 0) {
+    description = ActionDescription.sittingOut;
+    nonSeatPlayerName = getStringValue(action, /.+(?= is sitting out)/g);
+    counter++;
+  }
+  if (/ leaves the table/g.test(action) && counter === 0) {
+    description = ActionDescription.leavesTable;
+    nonSeatPlayerName = getStringValue(action, /.+(?= leaves the table)/g);
+    counter++;
+  }
+
+  if (/ joins the table/g.test(action) && counter === 0) {
+    description = ActionDescription.joinsTable;
+    nonSeatPlayerName = getStringValue(action, /.+(?= joins the table)/g);
+    counter++;
+  }
+  if (counter !== 1) {
+    console.log(action);
+    throw new Error("something unexpected");
+  }
+
+  if (description === undefined) {
+    console.log(seat);
+    console.log(description);
+    console.log(amount);
+    console.log(raiseToAmount);
+    throw new Error("description is  undefined");
+  }
+
+  if (seat === null && !nonSeatPlayerName) {
+    console.log(action);
+    throw new Error("missing noSeatPlayerName");
+  }
+  const result2 = {
+    seat,
+    description,
+    amount,
+    raiseToAmount,
+    message,
+    nonSeatPlayerName,
+    rebuyChipsReceived,
+    hand,
+    eliminatedSeat,
+    increasedBountyBy,
+    finalBounty
+  };
+  return filterUndefined(result2) as IAction;
+}
+
+function filterUndefined(obj: {}): {} {
+  const map = Object.entries<any>(obj);
+  const newObj: { [key: string]: any } = {};
+  map.forEach((keyValuePair) => {
+    if (keyValuePair[1] !== undefined) {
+      newObj[keyValuePair[0]] = keyValuePair[1];
+    }
+  });
+  return newObj;
+}
+
 function getWinsBountyAction(action: string, playersNames: string[]) {
-  const processAction = "wins bounty";
+  const description = ActionDescription.winBounty;
   const playerName = getStringValue(
     action,
     /.+(?=\swins\s(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?))/g
@@ -318,7 +296,7 @@ function getWinsBountyAction(action: string, playersNames: string[]) {
     throw new Error("didn't find seat");
   }
   return {
-    processAction,
+    description,
     eliminatedSeat,
     seat,
     increasedBountyBy,
@@ -398,7 +376,7 @@ function getRaiseAction(action: string) {
     throw new Error("does not match amount");
   }
   return {
-    processAction: "raises",
+    description: ActionDescription.raise,
     amount: parseDollars(matchAmount[0]),
     raiseToAmount: parseDollars(matchRaiseToAmount[0])
   };
@@ -419,18 +397,20 @@ function getDealtHandObject(handData: string) {
 }
 
 function getDealtHandString(handData: string) {
-  const match = getPreflopAction(handData).match(/(?<=NormanV41\s\[).+(?=\])/g);
+  const match = getPreflopActionString(handData).match(
+    /(?<=NormanV41\s\[).+(?=\])/g
+  );
   if (match) {
     return match[0];
   }
   if (/NormanV41 will be allowed to play after the button/g.test(handData)) {
     return null;
   }
-  console.log(getPreflopAction(handData));
+  console.log(getPreflopActionString(handData));
   throw new Error("didn't match dealt hands");
 }
 
-function getPreflopAction(handData: string) {
+function getPreflopActionString(handData: string) {
   return handData
     .split(/\*{3}\sHOLE\sCARDS\s\*{3}/g)[1]
     .split(/\*{3}\s([A-Z]|\s)+\s\*{3}/g)[0]

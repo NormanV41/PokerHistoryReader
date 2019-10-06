@@ -19,5 +19,10 @@ export enum ActionDescription {
   showsHand = "shows hand",
   winsTournament = "wins tournament",
   leavesTable = "leaves table",
-  joinsTable = "joins table"
+  joinsTable = "joins table",
+  ante = "post ante",
+  smallBlind = "post small blind",
+  bigBlind = "post big blind",
+  smallAndBigBlind = "post small and big blind",
+  playAfterButton = "play after button"
 }

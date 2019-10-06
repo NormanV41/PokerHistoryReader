@@ -43,10 +43,128 @@ fs.readFile(
     const handStringArray = data.split(/\nHand\s\#/g);
     handStringArray.shift();
     handStringArray.forEach((handData) => {
-      console.log(getPreflopAction(handData));
+      console.log(handData);
     });
   }
 );
+
+function getForcedBetsActions(handData: string) {
+  const players = getPlayers(handData);
+  const playersNames = players.map<string>((player) => {
+    return player.name;
+  });
+  return getForcedBetsActionString(handData)
+    .split("\n")
+    .map<IAction>((action) => {
+      return actionStringToActionObjectInForceBetAction(
+        action,
+        players,
+        playersNames
+      );
+    });
+}
+
+function actionStringToActionObjectInForceBetAction(
+  action: string,
+  players: IPlayer[],
+  playersNames: string[]
+) {
+  let seat: number | undefined;
+  let description: string | undefined;
+  let amount: number | undefined;
+  let noSeatPlayerName: string | undefined;
+  let counter = 0;
+  playersNames.forEach((player, index) => {
+    if (action.split(player).length > 1) {
+      action = action.replace(player, "");
+      seat = players[index].seat;
+      if (/: posts small blind /g.test(action)) {
+        description = ActionDescription.smallBlind;
+        amount = tryDolarFirstThenChips(action);
+      }
+      if (/: posts big blind/g.test(action)) {
+        description = ActionDescription.bigBlind;
+        amount = tryDolarFirstThenChips(action);
+      }
+      if (/: posts the ante/g.test(action)) {
+        description = ActionDescription.ante;
+        amount = tryDolarFirstThenChips(action);
+      }
+      if (/will be allowed to play after the button/g.test(action)) {
+        description = ActionDescription.playAfterButton;
+      }
+      if (/: posts small & big blinds /g.test(action)) {
+        description = ActionDescription.smallAndBigBlind;
+        amount = tryDolarFirstThenChips(action);
+      }
+      counter++;
+    }
+  });
+  if (/(: sits out)|(: is sitting out)/g.test(action) && counter === 0) {
+    description = ActionDescription.sittingOut;
+    noSeatPlayerName = getStringValue(
+      action,
+      /.+(?=(: sits out)|(: is sitting out))/g
+    );
+    counter++;
+  }
+  if (
+    / will be allowed to play after the button/g.test(action) &&
+    counter === 0
+  ) {
+    description = ActionDescription.playAfterButton;
+    noSeatPlayerName = getStringValue(
+      action,
+      /.+(?= will be allowed to play after the button)/g
+    );
+    counter++;
+  }
+  if (/ leaves the table/g.test(action) && counter === 0) {
+    description = ActionDescription.leavesTable;
+    noSeatPlayerName = getStringValue(action, /.+(?= leaves the table)/g);
+    counter++;
+  }
+  if (/ joins the table at seat/g.test(action) && counter === 0) {
+    description = ActionDescription.joinsTable;
+    noSeatPlayerName = getStringValue(
+      action,
+      /.+(?= joins the table at seat)/g
+    );
+    seat = getNumberValue(action, /(?<= at seat #)\d{1,2}/g);
+    counter++;
+  }
+  if (/ has timed out while disconnected/g.test(action) && counter === 0) {
+    description = ActionDescription.disconnectedTimeOut;
+    noSeatPlayerName = getStringValue(
+      action,
+      /.+(?= has timed out while disconnected)/g
+    );
+    counter++;
+  }
+  if (counter > 1) {
+    console.log(action);
+    throw new Error("counter greater than 1");
+  }
+  if (!description) {
+    console.log(action);
+    console.log(seat);
+    throw new Error("description undefined");
+  }
+  const result = {
+    seat,
+    description,
+    amount,
+    noSeatPlayerName
+  };
+  return filterUndefined(result) as IAction;
+}
+
+function getForcedBetsActionString(handData: string) {
+  const array = handData
+    .split("*** HOLE CARDS ***")[0]
+    .split(/Seat \d{1,2}: .+/);
+  return array[array.length - 1].trim();
+}
 
 function getPreflopAction(handData: string) {
   const players = getPlayers(handData);
@@ -179,7 +297,7 @@ function actionStringToActionObject(
       counter++;
     }
   });
-  if (/\s\[observer\]\ssaid,/g.test(action)) {
+  if (/\s\[observer\]\ssaid,/g.test(action) && counter === 0) {
     description = ActionDescription.said;
     nonSeatPlayerName = getStringValue(action, /.+(?=\s\[observer\]\s)/g);
     message = getMessage(action);
@@ -310,6 +428,14 @@ function getStringValue(action: string, reggex: RegExp) {
     checkForOnlyOneMatch(match);
     return match[0];
   });
+}
+
+function getNumberValue(action: string, reggex: RegExp, isFloat = false) {
+  const stringValue = getStringValue(action, reggex);
+  const num = isFloat
+    ? Number.parseFloat(stringValue)
+    : Number.parseInt(stringValue, 10);
+  return checkIfNumber(num);
 }
 
 function getHand(action: string) {

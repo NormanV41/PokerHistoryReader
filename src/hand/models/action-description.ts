@@ -1,5 +1,6 @@
 export enum ActionDescription {
   winBounty = "wins bounty",
+  bet = "bets",
   fold = "folds",
   raise = "raises",
   call = "calls",

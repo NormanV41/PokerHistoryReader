@@ -43,16 +43,109 @@ fs.readFile(
     const handStringArray = data.split(/\nHand\s\#/g);
     handStringArray.shift();
     handStringArray.forEach((handData) => {
-      console.log(handData);
+      const players = getPlayers(handData);
+      const playersNames = players.map<string>((player) => player.name);
     });
   }
 );
 
-function getForcedBetsActions(handData: string) {
-  const players = getPlayers(handData);
-  const playersNames = players.map<string>((player) => {
-    return player.name;
+function getTurnOrRiverAction(
+  handData: string,
+  players: IPlayer[],
+  playersNames: string[],
+  isRiver = false
+) {
+  if (!turnOrRiverWasPlayed(handData, isRiver)) {
+    return undefined;
+  }
+  const turnOrRiverActionsStringArray = handData
+    .split(isRiver ? /\*{3}\sRIVER\s\*{3}/g : /\*{3}\sTURN\s\*{3}/g)[1]
+    .split(/\*{3}\s([A-Z]|\s)+\s\*{3}/g)[0]
+    .trim()
+    .split("\n");
+  turnOrRiverActionsStringArray.shift();
+  return turnOrRiverActionsStringArray.map<IAction>((action) => {
+    return actionStringToActionObject(action, players, playersNames);
   });
+}
+
+function turnOrRiverWasPlayed(handData: string, isRiver = false) {
+  try {
+    getStringValue(
+      handData,
+      isRiver ? /(?<=\*\*\* RIVER \*\*\*).+/g : /(?<=\*\*\* TURN \*\*\*).+/g
+    );
+    return true;
+  } catch (error) {
+    if (error instanceof NoMatchError) {
+      return false;
+    }
+    throw error;
+  }
+}
+
+function getTurnOrRiver(handData: string, isRiver = false) {
+  if (turnOrRiverWasPlayed(handData, isRiver)) {
+    const turnOrRiverString = getStringValue(
+      handData,
+      isRiver
+        ? /(?<=\*\*\* RIVER \*\*\* \[.+\]).+/g
+        : /(?<=\*\*\* TURN \*\*\* \[.+\]).+/g
+    );
+    const cards = getHand(turnOrRiverString);
+    if (cards.length > 1) {
+      console.log(handData);
+      throw new Error("not handled yet");
+    }
+    return cards[0];
+  }
+  return undefined;
+}
+
+function getFlopAction(
+  handData: string,
+  players: IPlayer[],
+  playersNames: string[]
+) {
+  if (!flopWasPlayed(handData)) {
+    return undefined;
+  }
+  const flopActionsStringArray = handData
+    .split(/\*{3}\sFLOP\s\*{3}/g)[1]
+    .split(/\*{3}\s([A-Z]|\s)+\s\*{3}/g)[0]
+    .trim()
+    .split("\n");
+  flopActionsStringArray.shift();
+  return flopActionsStringArray.map<IAction>((action) => {
+    return actionStringToActionObject(action, players, playersNames);
+  });
+}
+
+function flopWasPlayed(handData: string) {
+  try {
+    getStringValue(handData, /(?<=\*\*\* FLOP \*\*\*).+/g);
+    return true;
+  } catch (error) {
+    if (error instanceof NoMatchError) {
+      return false;
+    }
+    throw error;
+  }
+}
+
+function getFlop(handData: string): Card[] | undefined {
+  if (flopWasPlayed(handData)) {
+    const flopString = getStringValue(handData, /(?<=\*\*\* FLOP \*\*\*).+/g);
+    return getHand(flopString);
+  }
+  return undefined;
+}
+
+function getForcedBetsActions(
+  handData: string,
+  players: IPlayer[],
+  playersNames: string[]
+) {
   return getForcedBetsActionString(handData)
     .split("\n")
     .map<IAction>((action) => {
@@ -166,9 +259,11 @@ function getForcedBetsActionString(handData: string) {
   return array[array.length - 1].trim();
 }
 
-function getPreflopAction(handData: string) {
-  const players = getPlayers(handData);
-  const playersNames = players.map<string>((player) => player.name);
+function getPreflopAction(
+  handData: string,
+  players: IPlayer[],
+  playersNames: string[]
+) {
   return getPreflopActionString(handData)
     .split("\n")
     .filter((action) => !/(?<=NormanV41\s\[).+(?=\])/g.test(action))
@@ -206,20 +301,30 @@ function actionStringToActionObject(
       finalBounty,
       amount
     } = getWinsBountyAction(action, playersNames));
-    const result1 = {
+    return {
       seat,
       description,
       amount,
-      raiseToAmount,
-      message,
-      nonSeatPlayerName,
-      rebuyChipsReceived,
-      hand,
       eliminatedSeat,
       increasedBountyBy,
       finalBounty
     };
-    return filterUndefined(result1) as IAction;
+  }
+  if (/(?<! \[observer\])\ssaid,\s"/g.test(action)) {
+    description = ActionDescription.said;
+    message = getMessage(action);
+    const playerName = getStringValue(action, /.+(?= said, ")/g);
+    const index = playersNames.findIndex((player) => player === playerName);
+    if (index === -1) {
+      console.log(action);
+      throw new Error("not handled yet");
+    }
+    seat = players[index].seat;
+    return {
+      seat,
+      message,
+      description
+    };
   }
   let counter = 0;
   playersNames.forEach((player, index) => {
@@ -231,6 +336,10 @@ function actionStringToActionObject(
       }
       if (/:\sraises\s/g.test(action)) {
         ({ description, amount, raiseToAmount } = getRaiseAction(action));
+      }
+      if (/: bets /g.test(action)) {
+        description = ActionDescription.bet;
+        amount = tryDolarFirstThenChips(action);
       }
       if (/:\scalls\s/g.test(action)) {
         description = ActionDescription.call;
@@ -253,10 +362,7 @@ function actionStringToActionObject(
       if (/\shas\stimed\sout\swhile\sdisconnected/g.test(action)) {
         description = ActionDescription.disconnectedTimeOut;
       }
-      if (/\ssaid,\s"/g.test(action)) {
-        description = ActionDescription.said;
-        message = getMessage(action);
-      }
+
       if (/\shas\stimed\sout/g.test(action)) {
         description = ActionDescription.timeOut;
       }
@@ -333,8 +439,14 @@ function actionStringToActionObject(
     nonSeatPlayerName = getStringValue(action, /.+(?= joins the table)/g);
     counter++;
   }
+  if (/ is disconnected/g.test(action) && counter === 0) {
+    description = ActionDescription.disconnected;
+    nonSeatPlayerName = getStringValue(action, /.+(?= is disconnected)/g);
+    counter++;
+  }
   if (counter !== 1) {
     console.log(action);
+    console.log(counter);
     throw new Error("something unexpected");
   }
 

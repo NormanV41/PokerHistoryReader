@@ -93,3 +93,14 @@ export function checkForOnlyOneMatch(match: RegExpMatchArray) {
     throw new Error("no more than one match");
   }
 }
+
+export function filterUndefinedAndNull(obj: {}): {} {
+  const map = Object.entries<any>(obj);
+  const newObj: { [key: string]: any } = {};
+  map.forEach((keyValuePair) => {
+    if (keyValuePair[1] !== undefined && keyValuePair[1] !== null) {
+      newObj[keyValuePair[0]] = keyValuePair[1];
+    }
+  });
+  return newObj;
+}

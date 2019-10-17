@@ -9,7 +9,8 @@ import {
   parseDollars,
   testMatch,
   checkForOnlyOneMatch,
-  checkIfNumber
+  checkIfNumber,
+  getStringValue
 } from "../methods";
 import { Card } from "./models/card";
 
@@ -460,13 +461,6 @@ function getWinsBountyAction(action: string, playersNames: string[]) {
     finalBounty,
     amount
   };
-}
-
-export function getStringValue(action: string, reggex: RegExp) {
-  return testMatch<string>(action.match(reggex), (match: RegExpMatchArray) => {
-    checkForOnlyOneMatch(match);
-    return match[0];
-  });
 }
 
 function getNumberValue(action: string, reggex: RegExp, isFloat = false) {

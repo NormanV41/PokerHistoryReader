@@ -104,3 +104,10 @@ export function filterUndefinedAndNull(obj: {}): {} {
   });
   return newObj;
 }
+
+export function getStringValue(action: string, reggex: RegExp) {
+  return testMatch<string>(action.match(reggex), (match: RegExpMatchArray) => {
+    checkForOnlyOneMatch(match);
+    return match[0];
+  });
+}

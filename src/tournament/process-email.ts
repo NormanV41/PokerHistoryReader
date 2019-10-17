@@ -9,8 +9,12 @@ import {
   matchCurrency,
   getPokerStarsDate,
   checkIfNumber,
-  parsingNumberFromMatchString
+  parsingNumberFromMatchString,
+  getStringValue,
+  generalParseChips,
+  generalParseDollars
 } from "../methods";
+import { NoMatchError } from "../models/no-match-error";
 
 const newTournaments$ = bindCallback(readTournamentSummary);
 export const existingTournaments$ = bindCallback(readExistingTournaments);
@@ -88,7 +92,7 @@ function readExistingTournaments(
   );
 }
 
-function readTournamentSummary(
+export function readTournamentSummary(
   fileName: string,
   action: (tournaments: ITournament[]) => void
 ) {
@@ -148,6 +152,10 @@ function getPlayers(tournamentInfo: string): IPlayer[] {
       country: getPlayerCountry(playerInfo),
       prize: getPlayerPrize(playerInfo, index, array)
     };
+    if (/Spin to Win -/g.test(player.country)) {
+      console.log(playerInfo);
+      throw new Error("wrong country");
+    }
     result.push(player);
   });
   return result;
@@ -238,35 +246,30 @@ function getTournamentId(tournamentInfo: string): number {
 }
 
 function getBuyIn(tournamentInfo: string): number[] {
-  if (/Freeroll/g.test(tournamentInfo)) {
+  if (/Freeroll=/g.test(tournamentInfo)) {
     return [0, 0];
   }
-  let paidMinusTaken = 0;
-  let taken = 0;
-  const match = tournamentInfo.match(
-    /(?<=(Buy-In:\s)|(\/))(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)/g
+  const buyInString = getStringValue(
+    tournamentInfo,
+    /(?<=[^(\d )]Buy-In: ).+(?= USD)/g
   );
-  if (!match) {
-    const matchPlayMoney = tournamentInfo.match(/(?<=(Buy-In:\s)|(\/))(\d+)/g);
-    if (matchPlayMoney) {
-      throw new Error("not accepting play money");
+  try {
+    return buyInString.split("/").map<number>((moneyString) => {
+      return generalParseDollars(moneyString);
+    });
+  } catch (error) {
+    if (error.message === "doesn't match currency") {
+      const matchPlayMoney = tournamentInfo.match(
+        /(?<=(Buy-In:\s)|(\/))(\d+)/g
+      );
+      if (matchPlayMoney) {
+        throw new Error("not accepting play money");
+      }
+      console.log(tournamentInfo);
+      throw new Error("not matching expected buy-in");
     }
-    console.log(tournamentInfo);
-    throw new Error("not matching expected buy-in");
+    throw error;
   }
-  if (match.length > 2) {
-    console.log(tournamentInfo);
-    console.log(match);
-    throw new Error("not matching expected buy-in");
-  }
-  match.forEach((element, index) => {
-    if (index === 0) {
-      paidMinusTaken = parseDollars(element);
-    } else {
-      taken = parseDollars(element);
-    }
-  });
-  return [checkIfNumber(paidMinusTaken), checkIfNumber(taken)];
 }
 
 function getPrizePool(tournamentInfo: string): number | string {

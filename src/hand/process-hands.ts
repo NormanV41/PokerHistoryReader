@@ -6,7 +6,6 @@ import {
   getFlopAction,
   getTurnOrRiverAction,
   turnOrRiverWasPlayed,
-  getStringValue,
   getHand,
   flopWasPlayed,
   getPreflopActionString
@@ -16,13 +15,14 @@ import {
   parsingNumberFromMatchString,
   parseDollars,
   checkIfNumber,
-  getPokerStarsDate
+  getPokerStarsDate,
+  getStringValue
 } from "../methods";
 import { Card } from "./models/card";
 import { IPlayer } from "./models/player";
 import { RomanNumeral } from "./roman-numeral";
 
-export function readTournamentSummary(
+export function readHandsHistory(
   fileName: string,
   action: (hands: IHand[]) => void
 ) {

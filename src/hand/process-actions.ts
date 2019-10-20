@@ -10,7 +10,8 @@ import {
   testMatch,
   checkForOnlyOneMatch,
   checkIfNumber,
-  getStringValue
+  getStringValue,
+  getNumberValue
 } from "../methods";
 import { Card } from "./models/card";
 
@@ -461,14 +462,6 @@ function getWinsBountyAction(action: string, playersNames: string[]) {
     finalBounty,
     amount
   };
-}
-
-function getNumberValue(action: string, reggex: RegExp, isFloat = false) {
-  const stringValue = getStringValue(action, reggex);
-  const num = isFloat
-    ? Number.parseFloat(stringValue)
-    : Number.parseInt(stringValue, 10);
-  return checkIfNumber(num);
 }
 
 export function getHand(action: string) {

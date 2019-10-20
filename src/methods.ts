@@ -111,3 +111,15 @@ export function getStringValue(action: string, reggex: RegExp) {
     return match[0];
   });
 }
+
+export function getNumberValue(
+  action: string,
+  reggex: RegExp,
+  isFloat = false
+) {
+  const stringValue = getStringValue(action, reggex);
+  const num = isFloat
+    ? Number.parseFloat(stringValue)
+    : Number.parseInt(stringValue, 10);
+  return checkIfNumber(num);
+}

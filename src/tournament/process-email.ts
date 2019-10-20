@@ -11,15 +11,15 @@ import {
   checkIfNumber,
   parsingNumberFromMatchString,
   getStringValue,
-  generalParseChips,
-  generalParseDollars
+  generalParseDollars,
+  getNumberValue
 } from "../methods";
 import { NoMatchError } from "../models/no-match-error";
 
 const newTournaments$ = bindCallback(readTournamentSummary);
 export const existingTournaments$ = bindCallback(readExistingTournaments);
 
-function writeTournamentsJson(tournaments: ITournament[]) {
+export function writeTournamentsJson(tournaments: ITournament[]) {
   fs.writeFile(
     "./data/tournament-summaries/ProcessData/tournaments.json",
     JSON.stringify(tournaments),
@@ -60,9 +60,14 @@ function mergingTournaments(
   newTournaments: ITournament[],
   oldTournaments: ITournament[]
 ) {
-  const oldGreatestDate = new Date(
-    oldTournaments[oldTournaments.length - 1].start
-  ).getTime();
+  let oldGreatestDate: number;
+  if (oldTournaments.length === 0) {
+    oldGreatestDate = 0;
+  } else {
+    oldGreatestDate = new Date(
+      oldTournaments[oldTournaments.length - 1].start
+    ).getTime();
+  }
   const cutIndex = newTournaments.findIndex((tournament) => {
     const start = tournament.start.getTime();
     return start > oldGreatestDate;
@@ -84,6 +89,10 @@ function readExistingTournaments(
     { encoding: "utf8" },
     (error, data) => {
       if (error) {
+        if (/no such file or directory/g.test(error.message)) {
+          action([]);
+          return;
+        }
         throw error;
       }
       const oldTournaments: ITournament[] = JSON.parse(data);
@@ -110,19 +119,52 @@ export function readTournamentSummary(
           return filterOutPlayMoneyTournaments(tournamentInfo);
         })
         .map<ITournament>((tournamentInfo) => {
-          return {
+          const { buyIn, currency } = getBuyIn(tournamentInfo);
+          const result: ITournament = {
             tournamentId: getTournamentId(tournamentInfo),
             start: getSartDate(tournamentInfo),
             end: getEndDate(tournamentInfo),
-            buyIn: getBuyIn(tournamentInfo),
+            buyIn,
             prizePool: getPrizePool(tournamentInfo),
             players: getPlayers(tournamentInfo),
             rebuyAddon: getRebuyAddon(tournamentInfo)
           };
+          if (currency) {
+            result.currency = currency;
+          }
+          return result;
         });
       action(tournaments);
     }
   );
+}
+
+function getBuyIn(
+  tournamentInfo: string
+): { buyIn: number[]; currency: string | undefined } {
+  let currency: string | undefined;
+  let buyIn: number[] | NoMatchError;
+  buyIn = getBuyInHelper(tournamentInfo);
+  if (buyIn instanceof NoMatchError) {
+    console.log(tournamentInfo.slice(0, 100));
+    buyIn = [];
+    try {
+      buyIn[0] = getNumberValue(
+        tournamentInfo,
+        /(?<=[^(\d )]Buy-In: ).+(?= SC)/g
+      );
+    } catch (error) {
+      if (/(?<=[^(\d )]Buy-In: )\d+\/\d+/g.test(tournamentInfo)) {
+        throw new Error("not accepting play money");
+      }
+      throw error;
+    }
+    currency = "SC";
+  }
+  return {
+    buyIn,
+    currency
+  };
 }
 
 function getRebuyAddon(tournamentInfo: string): number[] | null {
@@ -130,10 +172,12 @@ function getRebuyAddon(tournamentInfo: string): number[] | null {
   const matchAddon = tournamentInfo.match(/(\d+\saddon)/g);
   const rebuy = parsingNumberFromMatchString(matchRebuy);
   const addon = parsingNumberFromMatchString(matchAddon);
-  if (rebuy && addon) {
+  if ((rebuy || rebuy === 0) && (addon || addon === 0)) {
     return [rebuy, addon];
   }
-  if (rebuy || addon) {
+  if (rebuy || rebuy === 0 || (addon || addon === 0)) {
+    console.log(rebuy, addon);
+    console.log(tournamentInfo);
     throw new Error("this is not consider");
   }
   return null;
@@ -198,10 +242,15 @@ function getPlayerPrize(
 }
 
 function getPlayerCountry(playerInfo: string) {
-  return playerInfo
-    .replace(/\s+\d+:\s/g, "")
-    .replace(/.+\s\((?=[A-Z])/g, "")
-    .replace(/\),([^]+$)/g, "");
+  try {
+    return getStringValue(playerInfo, /(?<= \()[A-Z].+(?=\),[ =])/g);
+  } catch (error) {
+    if (/(?<= )\(\)(?=,[ =])/g.test(playerInfo)) {
+      return "";
+    }
+    console.log(playerInfo);
+    throw error;
+  }
 }
 
 function getPlayerName(playerInfo: string) {
@@ -245,14 +294,23 @@ function getTournamentId(tournamentInfo: string): number {
   return checkIfNumber(result);
 }
 
-function getBuyIn(tournamentInfo: string): number[] {
-  if (/Freeroll=/g.test(tournamentInfo)) {
+function getBuyInHelper(tournamentInfo: string): number[] | NoMatchError {
+  if (/Freeroll[= ]/g.test(tournamentInfo)) {
     return [0, 0];
   }
-  const buyInString = getStringValue(
-    tournamentInfo,
-    /(?<=[^(\d )]Buy-In: ).+(?= USD)/g
-  );
+  let buyInString = "";
+  try {
+    buyInString = getStringValue(
+      tournamentInfo,
+      /(?<=[^(\d )]Buy-In: ).+(?= USD)/g
+    );
+  } catch (error) {
+    if (error instanceof NoMatchError) {
+      return error;
+    }
+    console.log(tournamentInfo.slice(0, 100));
+    throw error;
+  }
   try {
     return buyInString.split("/").map<number>((moneyString) => {
       return generalParseDollars(moneyString);

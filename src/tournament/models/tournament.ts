@@ -8,4 +8,5 @@ export interface ITournament {
   rebuyAddon: number[] | null;
   buyIn: number[];
   players: IPlayer[];
+  currency?: string;
 }

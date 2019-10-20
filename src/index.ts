@@ -1,16 +1,9 @@
 import { sync } from "rimraf";
-import { readTournamentSummary } from "./hand/process-hands";
+import {
+  addTournaments,
+  existingTournaments$
+} from "./tournament/process-email";
 
-// addTournaments("septiembre_1");
-/*existingTournaments$().subscribe(data => data.forEach(tournament=>{
-  console.log(tournament.tournamentId)
-}));*/
-
-readTournamentSummary(
-  "./data/hand-history/Hands_26.12.18_5.5.19.txt",
-  (hands) => {
-    console.log(hands);
-  }
-);
-
+addTournaments("octubre_1");
+// existingTournaments$().subscribe((data) => console.log(data.length));
 sync("./lib/");

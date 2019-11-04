@@ -1,17 +1,18 @@
 export interface ISPGCount {
-  played: number;
-  won: number;
-  minutes: number;
-  money: number;
-  played2BI: number;
-  played3BI: number;
-  played5BI: number;
-  played10BI: number;
-  played25BI: number;
-  won2BI: number;
-  won3BI: number;
-  won5BI: number;
-  won10BI: number;
-  won25BI: number;
+  Played: number;
+  Won: number;
+  Minutes: number;
+  Money: number;
+  "2BI Played": number;
+  "3BI Played": number;
+  "5BI Played": number;
+  "10BI Played": number;
+  "25BI Played": number;
+  "2BI Won": number;
+  "3BI Won": number;
+  "5BI Won": number;
+  "10BI Won": number;
+  "25BI Won": number;
+
   [propName: string]: number;
 }

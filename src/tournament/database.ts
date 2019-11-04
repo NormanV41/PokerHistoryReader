@@ -1,7 +1,7 @@
 import { ITournament } from "./models/tournament";
-import { createConnection, Connection, MysqlError } from "mysql";
+import { Connection, MysqlError } from "mysql";
 import { IPlayer } from "./models/player";
-import {  getNumberValue } from "../methods";
+import {  getNumberValue, startConnectionWithDatabase } from "../methods";
 
 export function addTournamentData(tournament: ITournament, connection: Connection) {
   addTournamentToDatabase(tournament, connection);
@@ -168,31 +168,6 @@ function stringQueryForAddTournament(tournament: ITournament): string {
   const currencyString = currency ? `'${currency}')` : "NULL)";
   result += currencyString;
   return result;
-}
-
-function startConnectionWithDatabase(action: (connection: Connection) => void) {
-  const connection = createConnection({
-    host: "localhost",
-    user: "admin",
-    password: "pitcherFAH8MYSQL*",
-    database: "pokerdata"
-  });
-
-  connection.connect((error) => {
-    if (error) {
-      console.error("Error connecting to database");
-      return;
-    }
-    console.log("connection established");
-  });
-
-  action(connection);
-
-  connection.end((err) => {
-    if (err) {
-      throw err;
-    }
-  });
 }
 
 function formatDate(date: Date) {

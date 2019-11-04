@@ -2,6 +2,7 @@ import { NotANumberError } from "./models/not-a-number-error";
 import * as timezone from "moment-timezone";
 import { NoMatchError } from "./models/no-match-error";
 import { access } from "fs";
+import { Connection, createConnection } from "mysql";
 /**
  * @returns 1 if date1 is greater than date2, 0 if they are equal,
  *          and -1 if date1 is less than date2
@@ -122,4 +123,51 @@ export function getNumberValue(
     ? Number.parseFloat(stringValue)
     : Number.parseInt(stringValue, 10);
   return checkIfNumber(num);
+}
+
+export function startConnectionWithDatabase(
+  action: (connection: Connection) => void
+) {
+  const connection = createConnection({
+    host: "localhost",
+    user: "admin",
+    password: "pitcherFAH8MYSQL*",
+    database: "pokerdata"
+  });
+
+  connection.connect((error) => {
+    if (error) {
+      console.error("Error connecting to database");
+      return;
+    }
+    console.log("connection established");
+  });
+
+  action(connection);
+
+  connection.end((err) => {
+    if (err) {
+      throw err;
+    }
+  });
+}
+
+export function transpose(array: Array<Array<string | number>>) {
+  const width = array.length || 0;
+  const height = array[0].length;
+  if (height === 0 || width === 0) {
+    return [];
+  }
+  const t: Array<Array<string | number>> = [];
+  for (let index = 0; index < height; index++) {
+    t[index] = [];
+    for (let kindex = 0; kindex < width; kindex++) {
+      t[index][kindex] = array[kindex][index];
+    }
+  }
+  return t;
+}
+
+export function round(n: number, decimals: number) {
+  return Number(Math.round((n + "e" + decimals) as any) + "e-" + decimals);
 }

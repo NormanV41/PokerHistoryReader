@@ -12,12 +12,24 @@ import {
   parsingNumberFromMatchString,
   getStringValue,
   generalParseDollars,
-  getNumberValue
+  getNumberValue,
+  startConnectionWithDatabase
 } from "../methods";
 import { NoMatchError } from "../models/no-match-error";
+import { addTournamentData } from "./database";
 
-const newTournaments$ = bindCallback(readTournamentSummary);
+export const newTournaments$ = bindCallback(readTournamentSummary);
 export const existingTournaments$ = bindCallback(readExistingTournaments);
+
+export function addTournamentsData(fileName: string) {
+  newTournaments$(fileName).subscribe((tournaments) => {
+    startConnectionWithDatabase((connection) => {
+      tournaments.forEach((tournament) => {
+        addTournamentData(tournament, connection);
+      });
+    });
+  });
+}
 
 export function writeTournamentsJson(tournaments: ITournament[]) {
   fs.writeFile(
@@ -101,7 +113,7 @@ function readExistingTournaments(
   );
 }
 
-export function readTournamentSummary(
+function readTournamentSummary(
   fileName: string,
   action: (tournaments: ITournament[]) => void
 ) {

@@ -14,6 +14,7 @@ import {
   getNumberValue
 } from "../methods";
 import { Card } from "./models/card";
+import { platform } from "os";
 
 export function getTurnOrRiverAction(
   handData: string,
@@ -35,12 +36,60 @@ export function getTurnOrRiverAction(
   });
 }
 
+export function getShowDownAction(
+  handData: string,
+  players: IPlayer[],
+  playerNames: string[]
+) {
+  if (!thereIsShowdown(handData)) {
+    return undefined;
+  }
+  const showDownActionsStringArray = handData
+    .split(/\*{3} SHOW DOWN \*{3}/g)[1]
+    .split(/\*{3} SUMMARY \*{3}/g)[0]
+    .trim()
+    .split("\n");
+  const result = showDownActionsStringArray.map((action) =>
+    actionStringToActionObject(action, players, playerNames)
+  );
+
+  const result2 = handData
+    .split(/\*{3} SUMMARY \*{3}/g)[1]
+    .trim()
+    .split("\n")
+    .filter((action) => {
+      if (/(?<= mucked \[).+(?=])/g.test(action)) {
+        return true;
+      }
+      return false;
+    })
+    .map<IAction>((action) => {
+      const description = ActionDescription.mucksHand;
+      const seat = getNumberValue(action, /(?<=Seat )\d{1,2}(?=: )/g);
+      const hands = getHand(action);
+      return { description, seat, hands };
+    });
+  return result.concat(result2);
+}
+
 export function turnOrRiverWasPlayed(handData: string, isRiver = false) {
   try {
     getStringValue(
       handData,
       isRiver ? /(?<=\*\*\* RIVER \*\*\*).+/g : /(?<=\*\*\* TURN \*\*\*).+/g
     );
+    return true;
+  } catch (error) {
+    if (error instanceof NoMatchError) {
+      return false;
+    }
+    throw error;
+  }
+}
+
+export function thereIsShowdown(handData: string) {
+  try {
+    getStringValue(handData, /(\*\*\* SHOW DOWN \*\*\*)/g);
     return true;
   } catch (error) {
     if (error instanceof NoMatchError) {
@@ -218,7 +267,7 @@ function actionStringToActionObject(
   playersNames: string[]
 ): IAction {
   let seat: number | undefined;
-  let description: string | undefined;
+  let description: ActionDescription | undefined;
   let amount: number | undefined;
   let raiseToAmount: number | undefined;
   let message: string | undefined;
@@ -229,7 +278,7 @@ function actionStringToActionObject(
   let increasedBountyBy: number | undefined;
   let finalBounty: number | undefined;
   if (
-    /(\swins\s)(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)\sfor\seliminating\s/g.test(
+    /(\swins\s)(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)\sfor\s((eliminating)|(splitting the elimination of))\s/g.test(
       action
     )
   ) {
@@ -256,8 +305,11 @@ function actionStringToActionObject(
     const playerName = getStringValue(action, /.+(?= said, ")/g);
     const index = playersNames.findIndex((player) => player === playerName);
     if (index === -1) {
-      console.log(action);
-      throw new Error("not handled yet");
+      return {
+        description,
+        message,
+        nonSeatPlayerName: playerName
+      };
     }
     seat = players[index].seat;
     return {
@@ -330,12 +382,20 @@ function actionStringToActionObject(
         description = ActionDescription.showsHand;
         hand = getHand(action);
       }
-      if (/\swins\sthe\stournament/g.test(action)) {
+      if (
+        /(\swins\sthe\stournament)|( wins an entry to tournament)|( wins a .+ ticket)/g.test(
+          action
+        )
+      ) {
         description = ActionDescription.winsTournament;
       }
       if (/ leaves the table/g.test(action)) {
         description = ActionDescription.leavesTable;
       }
+      if (/: mucks hand/g.test(action)) {
+        description = ActionDescription.mucksHand;
+      }
+
       if (description === undefined) {
         console.log(action);
         throw new Error("action not handled");
@@ -426,7 +486,7 @@ function getWinsBountyAction(action: string, playersNames: string[]) {
   );
   const eliminatedPlayerName = getStringValue(
     action,
-    /(?<=\sfor\seliminating\s).+(?=\sand\stheir\sown)/g
+    /(?<=\sfor\s((eliminating)|(splitting the elimination of))\s).+(?=\sand\stheir\sown)/g
   );
   const eliminatedSeat = playersNames.findIndex(
     (player) => player === eliminatedPlayerName

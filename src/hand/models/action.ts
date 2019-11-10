@@ -1,8 +1,9 @@
 import { Card } from "./card";
+import { ActionDescription } from "./action-description";
 
 export interface IAction {
   seat?: number;
-  description: string;
+  description: ActionDescription;
   amount?: number;
   raiseToAmount?: number;
   message?: string;

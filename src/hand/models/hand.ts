@@ -21,4 +21,5 @@ export interface IHand {
   turnAction?: IAction[];
   river?: Card;
   riverAction?: IAction[];
+  showDownAction?: IAction[];
 }

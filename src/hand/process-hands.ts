@@ -8,7 +8,9 @@ import {
   turnOrRiverWasPlayed,
   getHand,
   flopWasPlayed,
-  getPreflopActionString
+  getPreflopActionString,
+  getShowDownAction,
+  thereIsShowdown
 } from "./process-actions";
 import {
   filterUndefinedAndNull,
@@ -16,18 +18,21 @@ import {
   parseDollars,
   checkIfNumber,
   getPokerStarsDate,
-  getStringValue
+  getStringValue,
+  getNumberValue
 } from "../methods";
 import { Card } from "./models/card";
 import { IPlayer } from "./models/player";
 import { RomanNumeral } from "./roman-numeral";
+import { bindCallback } from "rxjs";
+import { ActionDescription } from "./models/action-description";
+import { IAction } from "./models/action";
 
-export function readHandsHistory(
-  fileName: string,
-  action: (hands: IHand[]) => void
-) {
+export const readHandsHistory$ = bindCallback(readHandsHistory);
+
+function readHandsHistory(fileName: string, action: (hands: IHand[]) => void) {
   readFile(
-    fileName,
+    `./data/hand-history/${fileName}.txt`,
     {
       encoding: "utf8"
     },
@@ -37,39 +42,39 @@ export function readHandsHistory(
       }
       const handStringArray = data.split(/\nHand\s\#/g);
       handStringArray.shift();
-      const hands: IHand[] = handStringArray.map<IHand>((handData) => {
-        const players = getPlayers(handData);
-        const playersNames = players.map<string>((player) => player.name);
-        const result = {
-          id: getHandId(handData),
-          tournamentId: getTournamentId(handData),
-          date: getDate(handData),
-          smallBigBlind: getSmallBigBlind(handData),
-          tournamentLevel: getLevel(handData),
-          buttonSeat: whichSeatIsButton(handData),
-          tableId: getTableId(handData),
-          players,
-          ante: getAnte(handData),
-          dealtHand: getDealtHandObject(handData),
-          forceBetAction: getForcedBetsActions(handData, players, playersNames),
-          preflopAction: getPreflopAction(handData, players, playersNames),
-          flop: getFlop(handData),
-          flopAction: getFlopAction(handData, players, playersNames),
-          turn: getTurnOrRiver(handData),
-          turnAction: getTurnOrRiverAction(handData, players, playersNames),
-          river: getTurnOrRiver(handData, true),
-          riverAction: getTurnOrRiverAction(
-            handData,
-            players,
-            playersNames,
-            true
-          )
-        };
-        return filterUndefinedAndNull(result) as IHand;
-      });
+      const hands: IHand[] = handStringArray.map<IHand>((handData) =>
+        handDataStringToObject(handData)
+      );
       action(hands);
     }
   );
+}
+
+function handDataStringToObject(handData: string) {
+  const players = getPlayers(handData);
+  const playersNames = players.map<string>((player) => player.name);
+  const result = {
+    id: getHandId(handData),
+    tournamentId: getTournamentId(handData),
+    date: getDate(handData),
+    smallBigBlind: getSmallBigBlind(handData),
+    tournamentLevel: getLevel(handData),
+    buttonSeat: whichSeatIsButton(handData),
+    tableId: getTableId(handData),
+    players,
+    ante: getAnte(handData),
+    dealtHand: getDealtHandObject(handData),
+    forceBetAction: getForcedBetsActions(handData, players, playersNames),
+    preflopAction: getPreflopAction(handData, players, playersNames),
+    flop: getFlop(handData),
+    flopAction: getFlopAction(handData, players, playersNames),
+    turn: getTurnOrRiver(handData),
+    turnAction: getTurnOrRiverAction(handData, players, playersNames),
+    river: getTurnOrRiver(handData, true),
+    riverAction: getTurnOrRiverAction(handData, players, playersNames, true),
+    showDownAction: getShowDownAction(handData, players, playersNames)
+  };
+  return filterUndefinedAndNull(result) as IHand;
 }
 
 function getTurnOrRiver(handData: string, isRiver = false) {

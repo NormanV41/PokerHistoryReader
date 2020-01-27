@@ -3,6 +3,7 @@ import * as timezone from "moment-timezone";
 import { NoMatchError } from "./models/no-match-error";
 import { access } from "fs";
 import { Connection, createConnection } from "mysql";
+import { databaseSecrets } from "./config";
 /**
  * @returns 1 if date1 is greater than date2, 0 if they are equal,
  *          and -1 if date1 is less than date2
@@ -130,9 +131,10 @@ export function startConnectionWithDatabase(
 ) {
   const connection = createConnection({
     host: "localhost",
-    user: "admin",
-    password: "pitcherFAH8MYSQL*",
-    database: "pokerdata"
+    user: databaseSecrets.user,
+    password: databaseSecrets.password,
+    database: databaseSecrets.database,
+    multipleStatements: true
   });
 
   connection.connect((error) => {
@@ -170,4 +172,24 @@ export function transpose(array: Array<Array<string | number>>) {
 
 export function round(n: number, decimals: number) {
   return Number(Math.round((n + "e" + decimals) as any) + "e-" + decimals);
+}
+
+export function formatDate(date: Date) {
+  date = new Date(date);
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const day = date.getDate();
+  const hour = date.getHours();
+  const minutes = date.getMinutes();
+  const seconds = date.getSeconds();
+  return `${year}-${prependZero(month + 1)}-${prependZero(day)} ${prependZero(
+    hour
+  )}:${prependZero(minutes)}:${prependZero(seconds)}`;
+}
+
+function prependZero(n: number) {
+  if (n < 10) {
+    return "0" + n;
+  }
+  return "" + n;
 }

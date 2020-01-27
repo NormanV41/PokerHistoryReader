@@ -9,12 +9,10 @@ import {
   parseDollars,
   testMatch,
   checkForOnlyOneMatch,
-  checkIfNumber,
   getStringValue,
   getNumberValue
 } from "../methods";
 import { Card } from "./models/card";
-import { platform } from "os";
 
 export function getTurnOrRiverAction(
   handData: string,
@@ -28,8 +26,8 @@ export function getTurnOrRiverAction(
   const turnOrRiverActionsStringArray = handData
     .split(isRiver ? /\*{3}\sRIVER\s\*{3}/g : /\*{3}\sTURN\s\*{3}/g)[1]
     .split(/\*{3}\s([A-Z]|\s)+\s\*{3}/g)[0]
-    .trim()
-    .split("\n");
+    .split("\n")
+    .filter((action) => action.length > 1);
   turnOrRiverActionsStringArray.shift();
   return turnOrRiverActionsStringArray.map<IAction>((action) => {
     return actionStringToActionObject(action, players, playersNames);
@@ -47,8 +45,8 @@ export function getShowDownAction(
   const showDownActionsStringArray = handData
     .split(/\*{3} SHOW DOWN \*{3}/g)[1]
     .split(/\*{3} SUMMARY \*{3}/g)[0]
-    .trim()
-    .split("\n");
+    .split("\n")
+    .filter((action) => action.length > 1);
   const result = showDownActionsStringArray.map((action) =>
     actionStringToActionObject(action, players, playerNames)
   );
@@ -66,6 +64,13 @@ export function getShowDownAction(
     .map<IAction>((action) => {
       const description = ActionDescription.mucksHand;
       const seat = getNumberValue(action, /(?<=Seat )\d{1,2}(?=: )/g);
+      const player = players.find((el) => el.seat === seat);
+      if (!player) {
+        console.log(seat);
+        console.log(players);
+        throw new Error("should not be undefined");
+      }
+      action = action.replace(player.name, "");
       const hands = getHand(action);
       return { description, seat, hands };
     });
@@ -110,8 +115,8 @@ export function getFlopAction(
   const flopActionsStringArray = handData
     .split(/\*{3}\sFLOP\s\*{3}/g)[1]
     .split(/\*{3}\s([A-Z]|\s)+\s\*{3}/g)[0]
-    .trim()
-    .split("\n");
+    .split("\n")
+    .filter((action) => action.length > 1);
   flopActionsStringArray.shift();
   return flopActionsStringArray.map<IAction>((action) => {
     return actionStringToActionObject(action, players, playersNames);
@@ -137,6 +142,7 @@ export function getForcedBetsActions(
 ) {
   return getForcedBetsActionString(handData)
     .split("\n")
+    .filter((action) => action.length > 1)
     .map<IAction>((action) => {
       return actionStringToActionObjectInForceBetAction(
         action,
@@ -154,7 +160,7 @@ function actionStringToActionObjectInForceBetAction(
   let seat: number | undefined;
   let description: string | undefined;
   let amount: number | undefined;
-  let noSeatPlayerName: string | undefined;
+  let nonSeatPlayerName: string | undefined;
   let counter = 0;
   playersNames.forEach((player, index) => {
     if (action.split(player).length > 1) {
@@ -184,7 +190,7 @@ function actionStringToActionObjectInForceBetAction(
   });
   if (/(: sits out)|(: is sitting out)/g.test(action) && counter === 0) {
     description = ActionDescription.sittingOut;
-    noSeatPlayerName = getStringValue(
+    nonSeatPlayerName = getStringValue(
       action,
       /.+(?=(: sits out)|(: is sitting out))/g
     );
@@ -195,7 +201,7 @@ function actionStringToActionObjectInForceBetAction(
     counter === 0
   ) {
     description = ActionDescription.playAfterButton;
-    noSeatPlayerName = getStringValue(
+    nonSeatPlayerName = getStringValue(
       action,
       /.+(?= will be allowed to play after the button)/g
     );
@@ -203,21 +209,20 @@ function actionStringToActionObjectInForceBetAction(
   }
   if (/ leaves the table/g.test(action) && counter === 0) {
     description = ActionDescription.leavesTable;
-    noSeatPlayerName = getStringValue(action, /.+(?= leaves the table)/g);
+    nonSeatPlayerName = getStringValue(action, /.+(?= leaves the table)/g);
     counter++;
   }
   if (/ joins the table at seat/g.test(action) && counter === 0) {
     description = ActionDescription.joinsTable;
-    noSeatPlayerName = getStringValue(
+    nonSeatPlayerName = getStringValue(
       action,
       /.+(?= joins the table at seat)/g
     );
-    seat = getNumberValue(action, /(?<= at seat #)\d{1,2}/g);
     counter++;
   }
   if (/ has timed out while disconnected/g.test(action) && counter === 0) {
     description = ActionDescription.disconnectedTimeOut;
-    noSeatPlayerName = getStringValue(
+    nonSeatPlayerName = getStringValue(
       action,
       /.+(?= has timed out while disconnected)/g
     );
@@ -232,11 +237,21 @@ function actionStringToActionObjectInForceBetAction(
     console.log(seat);
     throw new Error("description undefined");
   }
+  if (seat === undefined && !nonSeatPlayerName) {
+    console.log(action);
+    console.log(seat);
+    throw new Error("should not happened");
+  }
+  if (seat !== undefined && nonSeatPlayerName) {
+    console.log(action);
+    console.log(seat);
+    throw new Error("should not happened");
+  }
   const result = {
     seat,
     description,
     amount,
-    noSeatPlayerName
+    nonSeatPlayerName
   };
   return filterUndefinedAndNull(result) as IAction;
 }
@@ -245,7 +260,7 @@ function getForcedBetsActionString(handData: string) {
   const array = handData
     .split("*** HOLE CARDS ***")[0]
     .split(/Seat \d{1,2}: .+/);
-  return array[array.length - 1].trim();
+  return array[array.length - 1];
 }
 
 export function getPreflopAction(
@@ -255,7 +270,12 @@ export function getPreflopAction(
 ) {
   return getPreflopActionString(handData)
     .split("\n")
-    .filter((action) => !/(?<=NormanV41\s\[).+(?=\])/g.test(action))
+    .filter((action) => {
+      if (action.length < 2) {
+        return false;
+      }
+      return !/(?<=NormanV41\s\[).+(?=\])/g.test(action);
+    })
     .map<IAction>((action) => {
       return actionStringToActionObject(action, players, playersNames);
     });
@@ -289,7 +309,7 @@ function actionStringToActionObject(
       increasedBountyBy,
       finalBounty,
       amount
-    } = getWinsBountyAction(action, playersNames));
+    } = getWinsBountyAction(action, players));
     return {
       seat,
       description,
@@ -369,8 +389,7 @@ function actionStringToActionObject(
       }
       if (/ re-buys and receives /g.test(action)) {
         description = ActionDescription.rebuys;
-        amount = generalParseDollars(action);
-        rebuyChipsReceived = generalParseChips(action);
+        ({ amount, rebuyChipsReceived } = getAmountForRebuy(action));
       }
       if (/ is disconnected/g.test(action)) {
         description = ActionDescription.disconnected;
@@ -411,7 +430,7 @@ function actionStringToActionObject(
   }
   if (/ re-buys and receives /g.test(action) && counter === 0) {
     description = ActionDescription.rebuys;
-    amount = generalParseDollars(action);
+    ({ amount, rebuyChipsReceived } = getAmountForRebuy(action));
     nonSeatPlayerName = getStringValue(
       action,
       /.+(?=\sre-buys\sand\sreceives\s)/g
@@ -447,6 +466,8 @@ function actionStringToActionObject(
   if (counter !== 1) {
     console.log(action);
     console.log(counter);
+    console.log(players);
+
     throw new Error("something unexpected");
   }
 
@@ -458,9 +479,14 @@ function actionStringToActionObject(
     throw new Error("description is  undefined");
   }
 
-  if (seat === null && !nonSeatPlayerName) {
+  if (seat === undefined && !nonSeatPlayerName) {
     console.log(action);
-    throw new Error("missing noSeatPlayerName");
+    throw new Error("missing nonSeatPlayerName");
+  }
+  if (seat !== undefined && nonSeatPlayerName) {
+    console.log(action);
+    console.log(description);
+    throw new Error("non seat means no seat!!!");
   }
   const result2 = {
     seat,
@@ -478,7 +504,26 @@ function actionStringToActionObject(
   return filterUndefinedAndNull(result2) as IAction;
 }
 
-function getWinsBountyAction(action: string, playersNames: string[]) {
+function getAmountForRebuy(action: string) {
+  let amount = 0;
+  let rebuyChipsReceived = 0;
+  try {
+    amount = generalParseDollars(action);
+    rebuyChipsReceived = generalParseChips(action);
+  } catch (error) {
+    if (/StarsCoin/g.test(action)) {
+      amount = getNumberValue(action, /(?<=receives )\d+/g);
+      rebuyChipsReceived = getNumberValue(action, /\d+(?= StarsCoin)/g);
+    } else {
+      console.log(action);
+      console.log(generalParseChips(action));
+      throw error;
+    }
+  }
+  return { amount, rebuyChipsReceived };
+}
+
+function getWinsBountyAction(action: string, players: IPlayer[]) {
   const description = ActionDescription.winBounty;
   const playerName = getStringValue(
     action,
@@ -488,10 +533,10 @@ function getWinsBountyAction(action: string, playersNames: string[]) {
     action,
     /(?<=\sfor\s((eliminating)|(splitting the elimination of))\s).+(?=\sand\stheir\sown)/g
   );
-  const eliminatedSeat = playersNames.findIndex(
-    (player) => player === eliminatedPlayerName
+  const eliminatedPlayer = players.find(
+    (player) => player.name === eliminatedPlayerName
   );
-  const seat = playersNames.findIndex((player) => player === playerName);
+  const mainPlayer = players.find((player) => player.name === playerName);
   const amount = parseDollars(
     getStringValue(
       action,
@@ -510,14 +555,14 @@ function getWinsBountyAction(action: string, playersNames: string[]) {
       /(?<=(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)\sto\s)(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)/g
     )
   );
-  if (seat === -1 || eliminatedSeat === -1) {
+  if (!mainPlayer || !eliminatedPlayer) {
     console.log(action);
     throw new Error("didn't find seat");
   }
   return {
     description,
-    eliminatedSeat,
-    seat,
+    eliminatedSeat: eliminatedPlayer.seat,
+    seat: mainPlayer.seat,
     increasedBountyBy,
     finalBounty,
     amount
@@ -525,16 +570,24 @@ function getWinsBountyAction(action: string, playersNames: string[]) {
 }
 
 export function getHand(action: string) {
-  return testMatch<Card[]>(
-    action.match(/(?<=\s\[).+(?=\])/g),
-    (match: RegExpMatchArray) => {
-      checkForOnlyOneMatch(match);
-      const hands = match[0].split(" ");
-      return hands.map<Card>((card) => {
-        return new Card(card);
-      });
+  try {
+    return testMatch<Card[]>(
+      action.match(/(?<=\s\[).+(?=\])/g),
+      (match: RegExpMatchArray) => {
+        checkForOnlyOneMatch(match);
+        const hands = match[0].split(" ");
+        return hands.map<Card>((card) => {
+          return new Card(card);
+        });
+      }
+    );
+  } catch (error) {
+    if (error instanceof NoMatchError) {
+      return testMatch<Card[]>(action.match(/\s\[\]/g), (match) => []);
     }
-  );
+    console.log(action);
+    throw error;
+  }
 }
 
 function getMessage(action: string) {
@@ -597,6 +650,5 @@ function getRaiseAction(action: string) {
 export function getPreflopActionString(handData: string) {
   return handData
     .split(/\*{3}\sHOLE\sCARDS\s\*{3}/g)[1]
-    .split(/\*{3}\s([A-Z]|\s)+\s\*{3}/g)[0]
-    .trim();
+    .split(/\*{3}\s([A-Z]|\s)+\s\*{3}/g)[0];
 }

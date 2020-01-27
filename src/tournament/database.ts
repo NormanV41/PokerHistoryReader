@@ -1,9 +1,17 @@
 import { ITournament } from "./models/tournament";
 import { Connection, MysqlError } from "mysql";
 import { IPlayer } from "./models/player";
-import {  getNumberValue, startConnectionWithDatabase } from "../methods";
+import {
+  getNumberValue,
+  startConnectionWithDatabase,
+  formatDate
+} from "../methods";
+import { callbackCheckingDuplicateWarning } from "../hand/database";
 
-export function addTournamentData(tournament: ITournament, connection: Connection) {
+export function addTournamentData(
+  tournament: ITournament,
+  connection: Connection
+) {
   addTournamentToDatabase(tournament, connection);
   addPlayersToDatabase(connection, tournament.players);
   addTournamentEnrollmentsToDatabase(connection, tournament);
@@ -60,26 +68,13 @@ function addTournamentEnrollmentsToDatabase(
   connection.query(
     query,
     [values],
-    (error: MysqlError | null, response: { message: string }) => {
-      if (error) {
-        if (
-          /ER_DUP_ENTRY: Duplicate entry .+ for key '(PRIMARY)|(unique_index)'/g.test(
-            error.message
-          )
-        ) {
-          return;
-        }
-        console.log(tournament);
-        throw error;
-      }
-      checkDuplicatesAndWarnings(response);
-    }
+    callbackCheckingDuplicateWarning(tournament)
   );
 }
 
 function addPlayersToDatabase(connection: Connection, players: IPlayer[]) {
   const query =
-    "insert ignore into tournamentPlayer(username, country) values ?";
+    "insert into player(username, country) values ? on duplicate key update country = values(country)";
   const values = players.map<string[]>((player) => {
     return [player.name, player.country];
   });
@@ -88,24 +83,23 @@ function addPlayersToDatabase(connection: Connection, players: IPlayer[]) {
     [values],
     (error: MysqlError | null, response: { message: string }) => {
       if (error) {
-        if (
-          /ER_DUP_ENTRY: Duplicate entry .+ for key '(PRIMARY)|(unique_index)'/g.test(
-            error.message
-          )
-        ) {
-          return;
-        }
         console.log(players);
         throw error;
       }
-      checkDuplicatesAndWarnings(response);
     }
   );
 }
 
-function checkDuplicatesAndWarnings(response: { message: string }) {
-  const duplicates = getNumberValue(response.message, /(?<=Duplicates: )\d+/g);
-  const warnings = getNumberValue(response.message, /(?<= Warnings: )\d+/g);
+export function checkDuplicatesAndWarnings(response: { message: string }) {
+  let duplicates = 0;
+  let warnings = 0;
+  try {
+    duplicates = getNumberValue(response.message, /(?<=Duplicates: )\d+/g);
+    warnings = getNumberValue(response.message, /(?<= Warnings: )\d+/g);
+  } catch (error) {
+    console.log(response);
+    throw error;
+  }
   if (duplicates !== warnings) {
     console.log(response);
     throw new Error("duplicates and warnings differ");
@@ -168,24 +162,4 @@ function stringQueryForAddTournament(tournament: ITournament): string {
   const currencyString = currency ? `'${currency}')` : "NULL)";
   result += currencyString;
   return result;
-}
-
-function formatDate(date: Date) {
-  date = new Date(date);
-  const year = date.getFullYear();
-  const month = date.getMonth();
-  const day = date.getDate();
-  const hour = date.getHours();
-  const minutes = date.getMinutes();
-  const seconds = date.getSeconds();
-  return `${year}-${prependZero(month + 1)}-${prependZero(day)} ${prependZero(
-    hour
-  )}:${prependZero(minutes)}:${prependZero(seconds)}`;
-}
-
-function prependZero(n: number) {
-  if (n < 10) {
-    return "0" + n;
-  }
-  return "" + n;
 }

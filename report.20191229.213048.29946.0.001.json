@@ -1,0 +1,615 @@
+
+{
+  "header": {
+    "reportVersion": 1,
+    "event": "Allocation failed - JavaScript heap out of memory",
+    "trigger": "FatalError",
+    "filename": "report.20191229.213048.29946.0.001.json",
+    "dumpEventTime": "2019-12-29T21:30:48Z",
+    "dumpEventTimeStamp": "1577676648226",
+    "processId": 29946,
+    "cwd": "/home/norman/Documentos/github/PokerHistoryReader",
+    "commandLine": [
+      "node",
+      "/home/norman/Documentos/github/PokerHistoryReader/node_modules/.bin/ts-node",
+      "src/index.ts"
+    ],
+    "nodejsVersion": "v12.12.0",
+    "glibcVersionRuntime": "2.27",
+    "glibcVersionCompiler": "2.17",
+    "wordSize": 64,
+    "arch": "x64",
+    "platform": "linux",
+    "componentVersions": {
+      "node": "12.12.0",
+      "v8": "7.7.299.13-node.12",
+      "uv": "1.32.0",
+      "zlib": "1.2.11",
+      "brotli": "1.0.7",
+      "ares": "1.15.0",
+      "modules": "72",
+      "nghttp2": "1.39.2",
+      "napi": "5",
+      "llhttp": "1.1.4",
+      "http_parser": "2.8.0",
+      "openssl": "1.1.1d",
+      "cldr": "35.1",
+      "icu": "64.2",
+      "tz": "2019a",
+      "unicode": "12.1"
+    },
+    "release": {
+      "name": "node",
+      "headersUrl": "https://nodejs.org/download/release/v12.12.0/node-v12.12.0-headers.tar.gz",
+      "sourceUrl": "https://nodejs.org/download/release/v12.12.0/node-v12.12.0.tar.gz"
+    },
+    "osName": "Linux",
+    "osRelease": "4.15.0-72-generic",
+    "osVersion": "#81-Ubuntu SMP Tue Nov 26 12:20:02 UTC 2019",
+    "osMachine": "x86_64",
+    "cpus": [
+      {
+        "model": "Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz",
+        "speed": 2193,
+        "user": 76544200,
+        "nice": 53100,
+        "sys": 23950400,
+        "idle": 1451523500,
+        "irq": 0
+      },
+      {
+        "model": "Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz",
+        "speed": 1455,
+        "user": 75342300,
+        "nice": 62300,
+        "sys": 22054900,
+        "idle": 155850700,
+        "irq": 0
+      },
+      {
+        "model": "Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz",
+        "speed": 2481,
+        "user": 73968200,
+        "nice": 44200,
+        "sys": 22685900,
+        "idle": 156269200,
+        "irq": 0
+      },
+      {
+        "model": "Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz",
+        "speed": 1987,
+        "user": 75161400,
+        "nice": 58900,
+        "sys": 22076400,
+        "idle": 156198700,
+        "irq": 0
+      },
+      {
+        "model": "Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz",
+        "speed": 1831,
+        "user": 75849200,
+        "nice": 223400,
+        "sys": 23086300,
+        "idle": 52035800,
+        "irq": 0
+      },
+      {
+        "model": "Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz",
+        "speed": 2132,
+        "user": 77381700,
+        "nice": 54400,
+        "sys": 24815100,
+        "idle": 143980100,
+        "irq": 0
+      },
+      {
+        "model": "Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz",
+        "speed": 1402,
+        "user": 73598700,
+        "nice": 51200,
+        "sys": 23598800,
+        "idle": 149705300,
+        "irq": 0
+      },
+      {
+        "model": "Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz",
+        "speed": 1534,
+        "user": 74150700,
+        "nice": 53300,
+        "sys": 24226500,
+        "idle": 153849300,
+        "irq": 0
+      }
+    ],
+    "networkInterfaces": [
+      {
+        "name": "lo",
+        "internal": true,
+        "mac": "00:00:00:00:00:00",
+        "address": "127.0.0.1",
+        "netmask": "255.0.0.0",
+        "family": "IPv4"
+      },
+      {
+        "name": "wlp2s0",
+        "internal": false,
+        "mac": "bc:a8:a6:b7:7f:e1",
+        "address": "192.168.1.232",
+        "netmask": "255.255.255.0",
+        "family": "IPv4"
+      },
+      {
+        "name": "lo",
+        "internal": true,
+        "mac": "00:00:00:00:00:00",
+        "address": "::1",
+        "netmask": "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",
+        "family": "IPv6",
+        "scopeid": 0
+      },
+      {
+        "name": "wlp2s0",
+        "internal": false,
+        "mac": "bc:a8:a6:b7:7f:e1",
+        "address": "fe80::c98d:53b0:b7fd:5176",
+        "netmask": "ffff:ffff:ffff:ffff::",
+        "family": "IPv6",
+        "scopeid": 2
+      }
+    ],
+    "host": "norman-Inspiron-7773"
+  },
+  "javascriptStack": {
+    "message": "No stack.",
+    "stack": [
+      "Unavailable."
+    ]
+  },
+  "nativeStack": [
+    {
+      "pc": "0x0000000000b02675",
+      "symbol": "report::TriggerNodeReport(v8::Isolate*, node::Environment*, char const*, char const*, std::string const&, v8::Local<v8::String>) [node]"
+    },
+    {
+      "pc": "0x00000000009d9fa3",
+      "symbol": "node::OnFatalError(char const*, char const*) [node]"
+    },
+    {
+      "pc": "0x0000000000b37c3e",
+      "symbol": "v8::Utils::ReportOOMFailure(v8::internal::Isolate*, char const*, bool) [node]"
+    },
+    {
+      "pc": "0x0000000000b37fb9",
+      "symbol": "v8::internal::V8::FatalProcessOutOfMemory(v8::internal::Isolate*, char const*, bool) [node]"
+    },
+    {
+      "pc": "0x0000000000ce3375",
+      "symbol": " [node]"
+    },
+    {
+      "pc": "0x0000000000ce3a06",
+      "symbol": "v8::internal::Heap::RecomputeLimits(v8::internal::GarbageCollector) [node]"
+    },
+    {
+      "pc": "0x0000000000cef89a",
+      "symbol": "v8::internal::Heap::PerformGarbageCollection(v8::internal::GarbageCollector, v8::GCCallbackFlags) [node]"
+    },
+    {
+      "pc": "0x0000000000cf07a5",
+      "symbol": "v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags) [node]"
+    },
+    {
+      "pc": "0x0000000000cf31b8",
+      "symbol": "v8::internal::Heap::AllocateRawWithRetryOrFail(int, v8::internal::AllocationType, v8::internal::AllocationAlignment) [node]"
+    },
+    {
+      "pc": "0x0000000000cb9ae7",
+      "symbol": "v8::internal::Factory::NewFillerObject(int, bool, v8::internal::AllocationType) [node]"
+    },
+    {
+      "pc": "0x0000000000fefa1b",
+      "symbol": "v8::internal::Runtime_AllocateInYoungGeneration(int, unsigned long*, v8::internal::Isolate*) [node]"
+    },
+    {
+      "pc": "0x0000000001372459",
+      "symbol": " [node]"
+    }
+  ],
+  "javascriptHeap": {
+    "totalMemory": 2174226432,
+    "totalCommittedMemory": 2167013152,
+    "usedMemory": 2124396504,
+    "availableMemory": 42392240,
+    "memoryLimit": 2197815296,
+    "heapSpaces": {
+      "read_only_space": {
+        "memorySize": 262144,
+        "committedMemory": 32568,
+        "capacity": 261872,
+        "used": 32296,
+        "available": 229576
+      },
+      "new_space": {
+        "memorySize": 9437184,
+        "committedMemory": 2916768,
+        "capacity": 4713696,
+        "used": 745320,
+        "available": 3968376
+      },
+      "old_space": {
+        "memorySize": 2000269312,
+        "committedMemory": 1999999432,
+        "capacity": 1970144304,
+        "used": 1960252576,
+        "available": 9891728
+      },
+      "code_space": {
+        "memorySize": 1736704,
+        "committedMemory": 1640928,
+        "capacity": 1259616,
+        "used": 1259616,
+        "available": 0
+      },
+      "map_space": {
+        "memorySize": 1052672,
+        "committedMemory": 955040,
+        "capacity": 710560,
+        "used": 710560,
+        "available": 0
+      },
+      "large_object_space": {
+        "memorySize": 161419264,
+        "committedMemory": 161419264,
+        "capacity": 161392584,
+        "used": 161392584,
+        "available": 0
+      },
+      "code_large_object_space": {
+        "memorySize": 49152,
+        "committedMemory": 49152,
+        "capacity": 3552,
+        "used": 3552,
+        "available": 0
+      },
+      "new_large_object_space": {
+        "memorySize": 0,
+        "committedMemory": 0,
+        "capacity": 4713696,
+        "used": 0,
+        "available": 4713696
+      }
+    }
+  },
+  "resourceUsage": {
+    "userCpuSeconds": 617.143,
+    "kernelCpuSeconds": 37.3635,
+    "cpuConsumptionPercent": 4.92184,
+    "maxRss": 2272006144,
+    "pageFaults": {
+      "IORequired": 18,
+      "IONotRequired": 1388631
+    },
+    "fsActivity": {
+      "reads": 2160,
+      "writes": 0
+    }
+  },
+  "uvthreadResourceUsage": {
+    "userCpuSeconds": 472.57,
+    "kernelCpuSeconds": 32.969,
+    "cpuConsumptionPercent": 3.80161,
+    "fsActivity": {
+      "reads": 2160,
+      "writes": 0
+    }
+  },
+  "libuv": [
+  ],
+  "environmentVariables": {
+    "GJS_DEBUG_TOPICS": "JS ERROR;JS LOG",
+    "LESSOPEN": "| /usr/bin/lesspipe %s",
+    "npm_package_devDependencies__types_node": "^12.7.12",
+    "npm_package_devDependencies_ts_node": "^8.4.1",
+    "npm_package_devDependencies_tslint": "^5.20.0",
+    "npm_config_cache_lock_stale": "60000",
+    "npm_config_ham_it_up": "",
+    "npm_config_legacy_bundling": "",
+    "npm_config_sign_git_tag": "",
+    "USER": "norman",
+    "LC_TIME": "es_HN.UTF-8",
+    "npm_config_user_agent": "npm/6.13.0 node/v12.12.0 linux x64",
+    "npm_config_always_auth": "",
+    "TEXTDOMAIN": "im-config",
+    "USE_MPIF": "y",
+    "XDG_SEAT": "seat0",
+    "npm_config_bin_links": "true",
+    "npm_config_key": "",
+    "SSH_AGENT_PID": "2157",
+    "XDG_SESSION_TYPE": "x11",
+    "MATHEMATICA_HOME": "/usr/local/Wolfram/Mathematica/10.4",
+    "npm_package_devDependencies_nodemon": "^1.19.3",
+    "npm_config_description": "true",
+    "npm_config_fetch_retries": "2",
+    "npm_config_heading": "npm",
+    "npm_config_init_version": "1.0.0",
+    "npm_config_user": "1000",
+    "npm_config_allow_same_version": "",
+    "npm_config_if_present": "",
+    "npm_node_execpath": "/home/norman/.nvm/versions/node/v12.12.0/bin/node",
+    "LD_LIBRARY_PATH": "/home/norman/OpenMPI/lib:",
+    "SHLVL": "1",
+    "npm_package_dependencies_rxjs": "^6.5.3",
+    "npm_config_prefer_online": "",
+    "npm_config_noproxy": "",
+    "QT4_IM_MODULE": "xim",
+    "HOME": "/home/norman",
+    "OLDPWD": "/home/norman",
+    "npm_package_dependencies_moment_timezone": "^0.5.26",
+    "npm_config_force": "",
+    "DESKTOP_SESSION": "ubuntu",
+    "NVM_BIN": "/home/norman/.nvm/versions/node/v12.12.0/bin",
+    "NVM_NODEJS_ORG_MIRROR": "https://nodejs.org/dist",
+    "npm_config_only": "",
+    "npm_config_read_only": "",
+    "NWCHEM_TOP": "/home/norman/nwchem-6.8",
+    "npm_config_cache_min": "10",
+    "npm_config_init_license": "ISC",
+    "GNOME_SHELL_SESSION_MODE": "ubuntu",
+    "GTK_MODULES": "gail:atk-bridge",
+    "HOMEBREW_PREFIX": "/home/linuxbrew/.linuxbrew",
+    "npm_package_scripts_build_live": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
+    "npm_config_editor": "vi",
+    "npm_config_rollback": "true",
+    "npm_config_tag_version_prefix": "v",
+    "LC_MONETARY": "es_HN.UTF-8",
+    "npm_config_cache_max": "Infinity",
+    "npm_config_userconfig": "/home/norman/.npmrc",
+    "npm_config_timing": "",
+    "USE_MPI": "y",
+    "DBUS_SESSION_BUS_ADDRESS": "unix:path=/run/user/1000/bus",
+    "npm_package_dependencies_moment": "^2.24.0",
+    "npm_config_tmp": "/tmp",
+    "npm_config_engine_strict": "",
+    "npm_config_init_author_name": "",
+    "npm_config_init_author_url": "",
+    "npm_config_preid": "",
+    "COLORTERM": "truecolor",
+    "npm_package_description": "Will read the PokerStars Tournament Summaries and Hand Histories and converted in json files",
+    "npm_package_devDependencies_typescript": "^3.6.4",
+    "npm_config_depth": "Infinity",
+    "npm_config_package_lock_only": "",
+    "npm_config_save_dev": "",
+    "npm_config_usage": "",
+    "NVM_DIR": "/home/norman/.nvm",
+    "USE_INTERNALBLAS": "y",
+    "NVM_PATH": "/home/norman/.nvm/versions/node/v12.12.0/lib/node",
+    "npm_package_readmeFilename": "README.md",
+    "npm_config_metrics_registry": "https://registry.npmjs.org/",
+    "npm_config_package_lock": "true",
+    "npm_config_progress": "true",
+    "npm_config_cafile": "",
+    "npm_config_otp": "",
+    "npm_config_https_proxy": "",
+    "npm_config_save_prod": "",
+    "MANDATORY_PATH": "/usr/share/gconf/ubuntu.mandatory.path",
+    "IM_CONFIG_PHASE": "2",
+    "INFOPATH": "/home/linuxbrew/.linuxbrew/share/info:",
+    "npm_config_audit": "true",
+    "npm_config_sso_type": "oauth",
+    "npm_config_cidr": "",
+    "npm_config_onload_script": "",
+    "LOGNAME": "norman",
+    "GTK_IM_MODULE": "ibus",
+    "npm_package_devDependencies_node_key_sender": "^1.0.11",
+    "npm_config_rebuild_bundle": "true",
+    "npm_config_shell": "/bin/bash",
+    "npm_config_save_bundle": "",
+    "USE_MPIF4": "y",
+    "_": "/home/norman/.nvm/versions/node/v12.12.0/bin/npm",
+    "npm_config_format_package_lock": "true",
+    "npm_config_prefix": "/home/norman/.nvm/versions/node/v12.12.0",
+    "npm_config_dry_run": "",
+    "LARGE_FILES": "TRUE",
+    "DEFAULTS_PATH": "/usr/share/gconf/ubuntu.default.path",
+    "npm_package_scripts_lint": "tslint \"src/**/*.ts\"",
+    "npm_config_scope": "",
+    "npm_config_cache_lock_wait": "10000",
+    "npm_config_registry": "https://registry.npmjs.org/",
+    "npm_config_browser": "",
+    "npm_config_ignore_prepublish": "",
+    "npm_config_save_optional": "",
+    "npm_config_searchopts": "",
+    "npm_config_versions": "",
+    "USERNAME": "norman",
+    "XDG_SESSION_ID": "2",
+    "TERM": "xterm-256color",
+    "npm_config_cache": "/home/norman/.npm",
+    "npm_config_proxy": "",
+    "npm_config_send_metrics": "",
+    "GNOME_DESKTOP_SESSION_ID": "this-is-deprecated",
+    "npm_package_scripts_start": "npm run build:live",
+    "npm_config_global_style": "",
+    "npm_config_ignore_scripts": "",
+    "npm_config_version": "",
+    "WINDOWPATH": "2",
+    "npm_package_devDependencies__types_table": "^4.0.7",
+    "npm_config_viewer": "man",
+    "npm_config_node_gyp": "/home/norman/.nvm/versions/node/v12.12.0/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js",
+    "npm_config_local_address": "",
+    "PATH": "/home/norman/Documentos/github/PokerHistoryReader/node_modules/.bin:/home/norman/.nvm/versions/node/v12.12.0/lib/node_modules/npm/node_modules/npm-lifecycle/node-gyp-bin:/home/norman/Documentos/github/PokerHistoryReader/node_modules/.bin:/home/norman/.nvm/versions/node/v12.12.0/lib/node_modules/npm/node_modules/npm-lifecycle/node-gyp-bin:/home/norman/Documentos/github/PokerHistoryReader/node_modules/.bin:/home/norman/.nvm/versions/node/v12.12.0/bin:/home/norman/anaconda3/bin:/home/norman/OpenMPI/bin:/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:/usr/local/lib/nodejs/node-v10.14.2-linux-x64/bin:/home/norman/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
+    "NVM_IOJS_ORG_MIRROR": "https://iojs.org/dist",
+    "HOMEBREW_CELLAR": "/home/linuxbrew/.linuxbrew/Cellar",
+    "SESSION_MANAGER": "local/norman-Inspiron-7773:@/tmp/.ICE-unix/1910,unix/norman-Inspiron-7773:/tmp/.ICE-unix/1910",
+    "NODE": "/home/norman/.nvm/versions/node/v12.12.0/bin/node",
+    "npm_package_name": "pokertracker",
+    "npm_config_audit_level": "low",
+    "npm_config_prefer_offline": "",
+    "XDG_MENU_PREFIX": "gnome-",
+    "GNOME_TERMINAL_SCREEN": "/org/gnome/Terminal/screen/5772cb85_6d01_40f0_b5b8_e0c9155d1292",
+    "LC_ADDRESS": "es_HN.UTF-8",
+    "XDG_RUNTIME_DIR": "/run/user/1000",
+    "npm_config_color": "true",
+    "npm_config_sign_git_commit": "",
+    "DISPLAY": ":0",
+    "npm_config_fetch_retry_mintimeout": "10000",
+    "npm_config_maxsockets": "50",
+    "npm_config_sso_poll_frequency": "500",
+    "npm_config_offline": "",
+    "LANG": "en_US.UTF-8",
+    "XDG_CURRENT_DESKTOP": "ubuntu:GNOME",
+    "LC_TELEPHONE": "es_HN.UTF-8",
+    "NODEJS_HOME": "/usr/local/lib/nodejs/node-v10.14.2-linux-x64/bin",
+    "npm_package_scripts_inspect": "tsc -p . && node --inspect-brk lib/index.js && rm -r lib/",
+    "npm_package_devDependencies__types_rimraf": "^2.0.2",
+    "npm_config_umask": "0022",
+    "LS_COLORS": "rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.Z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:",
+    "NWCHEM_TARGET": "LINUX64",
+    "XDG_SESSION_DESKTOP": "ubuntu",
+    "XMODIFIERS": "@im=ibus",
+    "GNOME_TERMINAL_SERVICE": ":1.1067",
+    "MPI_DIR": "/home/norman/OpenMPI",
+    "XAUTHORITY": "/run/user/1000/gdm/Xauthority",
+    "npm_package_main": "index.js",
+    "npm_package_gitHead": "bc0cc2fcc9f26d6eb4683fe6afa859d9d89d7b9a",
+    "npm_config_fund": "true",
+    "npm_config_fetch_retry_maxtimeout": "60000",
+    "npm_config_loglevel": "notice",
+    "npm_config_logs_max": "10",
+    "npm_config_message": "%s",
+    "npm_lifecycle_script": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
+    "SSH_AUTH_SOCK": "/run/user/1000/keyring/ssh",
+    "npm_package_scripts_test": "echo \"Error: no test specified\" && exit 1",
+    "npm_config_ca": "",
+    "npm_config_cert": "",
+    "npm_config_global": "",
+    "npm_config_link": "",
+    "LC_NAME": "es_HN.UTF-8",
+    "SHELL": "/bin/bash",
+    "npm_package_version": "1.0.0",
+    "npm_package_devDependencies__types_mysql": "^2.15.7",
+    "npm_config_save": "true",
+    "npm_config_unicode": "true",
+    "npm_config_access": "",
+    "npm_config_also": "",
+    "npm_lifecycle_event": "build:live",
+    "QT_ACCESSIBILITY": "1",
+    "GDMSESSION": "ubuntu",
+    "npm_package_scripts_build": "tsc -p .",
+    "npm_config_argv": "{\"remain\":[],\"cooked\":[\"run\",\"build:live\"],\"original\":[\"run\",\"build:live\"]}",
+    "npm_config_searchlimit": "20",
+    "npm_config_unsafe_perm": "true",
+    "npm_config_update_notifier": "true",
+    "npm_config_before": "",
+    "npm_config_long": "",
+    "npm_config_production": "",
+    "NWCHEM_MODULES": "all",
+    "LESSCLOSE": "/usr/bin/lesspipe %s %s",
+    "npm_package_author": "",
+    "npm_config_auth_type": "legacy",
+    "npm_config_node_version": "12.12.0",
+    "npm_config_tag": "latest",
+    "LC_MEASUREMENT": "es_HN.UTF-8",
+    "npm_config_git_tag_version": "true",
+    "npm_config_commit_hooks": "true",
+    "npm_config_shrinkwrap": "true",
+    "npm_config_script_shell": "",
+    "TEXTDOMAINDIR": "/usr/share/locale/",
+    "GJS_DEBUG_OUTPUT": "stderr",
+    "GPG_AGENT_INFO": "/run/user/1000/gnupg/S.gpg-agent:0:1",
+    "LC_IDENTIFICATION": "es_HN.UTF-8",
+    "npm_package_license": "ISC",
+    "npm_package_dependencies_table": "^5.4.6",
+    "npm_config_fetch_retry_factor": "10",
+    "npm_config_strict_ssl": "true",
+    "npm_config_save_exact": "",
+    "XDG_VTNR": "2",
+    "QT_IM_MODULE": "ibus",
+    "npm_package_scripts_format": "prettier --write \"**/*.ts\" \"**/*.html\" \"**/*.scss\" \"**/*.json !(data/)\"",
+    "npm_config_globalconfig": "/home/norman/.nvm/versions/node/v12.12.0/etc/npmrc",
+    "npm_config_init_module": "/home/norman/.npm-init.js",
+    "npm_config_dev": "",
+    "npm_config_parseable": "",
+    "JAVA_HOME": "/usr/lib/jvm/java-11-openjdk-amd64/",
+    "PWD": "/home/norman/Documentos/github/PokerHistoryReader",
+    "npm_config_globalignorefile": "/home/norman/.nvm/versions/node/v12.12.0/etc/npmignore",
+    "npm_execpath": "/home/norman/.nvm/versions/node/v12.12.0/lib/node_modules/npm/bin/npm-cli.js",
+    "CLUTTER_IM_MODULE": "xim",
+    "NVM_CD_FLAGS": "",
+    "XDG_DATA_DIRS": "/usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop",
+    "XDG_CONFIG_DIRS": "/etc/xdg/xdg-ubuntu:/etc/xdg",
+    "npm_package_prettier_arrowParens": "always",
+    "npm_package_devDependencies__types_moment_timezone": "^0.5.12",
+    "npm_config_cache_lock_retries": "10",
+    "npm_config_searchstaleness": "900",
+    "LC_NUMERIC": "es_HN.UTF-8",
+    "HOMEBREW_REPOSITORY": "/home/linuxbrew/.linuxbrew/Homebrew",
+    "npm_package_dependencies_rimraf": "^3.0.0",
+    "npm_config_save_prefix": "^",
+    "npm_config_scripts_prepend_node_path": "warn-only",
+    "npm_config_node_options": "",
+    "LC_PAPER": "es_HN.UTF-8",
+    "npm_config_group": "1000",
+    "npm_config_init_author_email": "",
+    "npm_config_searchexclude": "",
+    "VTE_VERSION": "5202",
+    "MANPATH": "/home/norman/.nvm/versions/node/v12.12.0/share/man:/home/linuxbrew/.linuxbrew/share/man:",
+    "npm_config_git": "git",
+    "npm_config_optional": "true",
+    "INIT_CWD": "/home/norman/Documentos/github/PokerHistoryReader",
+    "npm_package_dependencies_mysql": "^2.17.1",
+    "npm_config_json": ""
+  },
+  "userLimits": {
+    "core_file_size_blocks": {
+      "soft": 0,
+      "hard": "unlimited"
+    },
+    "data_seg_size_kbytes": {
+      "soft": "unlimited",
+      "hard": "unlimited"
+    },
+    "file_size_blocks": {
+      "soft": "unlimited",
+      "hard": "unlimited"
+    },
+    "max_locked_memory_bytes": {
+      "soft": 16777216,
+      "hard": 16777216
+    },
+    "max_memory_size_kbytes": {
+      "soft": "unlimited",
+      "hard": "unlimited"
+    },
+    "open_files": {
+      "soft": 4096,
+      "hard": 4096
+    },
+    "stack_size_bytes": {
+      "soft": 8388608,
+      "hard": "unlimited"
+    },
+    "cpu_time_seconds": {
+      "soft": "unlimited",
+      "hard": "unlimited"
+    },
+    "max_user_processes": {
+      "soft": 62781,
+      "hard": 62781
+    },
+    "virtual_memory_kbytes": {
+      "soft": "unlimited",
+      "hard": "unlimited"
+    }
+  },
+  "sharedObjects": [
+    "linux-vdso.so.1",
+    "/lib/x86_64-linux-gnu/libdl.so.2",
+    "/usr/lib/x86_64-linux-gnu/libstdc++.so.6",
+    "/lib/x86_64-linux-gnu/libm.so.6",
+    "/lib/x86_64-linux-gnu/libgcc_s.so.1",
+    "/lib/x86_64-linux-gnu/libpthread.so.0",
+    "/lib/x86_64-linux-gnu/libc.so.6",
+    "/lib64/ld-linux-x86-64.so.2",
+    "/lib/x86_64-linux-gnu/libnss_files.so.2"
+  ]
+}

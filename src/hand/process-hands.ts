@@ -9,8 +9,7 @@ import {
   getHand,
   flopWasPlayed,
   getPreflopActionString,
-  getShowDownAction,
-  thereIsShowdown
+  getShowDownAction
 } from "./process-actions";
 import {
   filterUndefinedAndNull,
@@ -18,15 +17,12 @@ import {
   parseDollars,
   checkIfNumber,
   getPokerStarsDate,
-  getStringValue,
-  getNumberValue
+  getStringValue
 } from "../methods";
 import { Card } from "./models/card";
 import { IPlayer } from "./models/player";
 import { RomanNumeral } from "./roman-numeral";
 import { bindCallback } from "rxjs";
-import { ActionDescription } from "./models/action-description";
-import { IAction } from "./models/action";
 
 export const readHandsHistory$ = bindCallback(readHandsHistory);
 
@@ -42,12 +38,26 @@ function readHandsHistory(fileName: string, action: (hands: IHand[]) => void) {
       }
       const handStringArray = data.split(/\nHand\s\#/g);
       handStringArray.shift();
-      const hands: IHand[] = handStringArray.map<IHand>((handData) =>
-        handDataStringToObject(handData)
-      );
+      const hands: IHand[] = handStringArray
+        .filter((handString) => filteringOutWierdFormats(handString))
+        .map<IHand>((handData) => {
+          try {
+            return handDataStringToObject(handData);
+          } catch (error) {
+            console.log(handData);
+            throw error;
+          }
+        });
       action(hands);
     }
   );
+}
+
+function filteringOutWierdFormats(handString: string) {
+  if (/(?<=Level .+ \()Button Blind\s\d+ - Ante\s\d+ /g.test(handString)) {
+    return false;
+  }
+  return !/Razz Limit/g.test(handString);
 }
 
 function handDataStringToObject(handData: string) {
@@ -206,6 +216,7 @@ function whichSeatIsButton(handData: string): number {
   const match = handData.match(/(?<=Seat\s#)\d{1,2}(?=\sis\sthe\sbutton)/g);
   const result = parsingNumberFromMatchString(match);
   if (!result) {
+    console.log(handData);
     throw new Error("is not a number");
   }
   return result;

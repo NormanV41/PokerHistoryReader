@@ -151,6 +151,7 @@ export function startConnectionWithDatabase(
     if (err) {
       throw err;
     }
+    console.log("connection ended");
   });
 }
 

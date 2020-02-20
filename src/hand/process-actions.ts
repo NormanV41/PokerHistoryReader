@@ -414,6 +414,14 @@ function actionStringToActionObject(
       if (/: mucks hand/g.test(action)) {
         description = ActionDescription.mucksHand;
       }
+      if (/ cashed out the hand/g.test(action)) {
+        description = ActionDescription.cashOut;
+        amount = getNumberValue(
+          action,
+          /(?<=for \$)((\d{1,3}(\,\d{3})*)(\.\d{2})?)(?!\d+)/g,
+          true
+        );
+      }
 
       if (description === undefined) {
         console.log(action);

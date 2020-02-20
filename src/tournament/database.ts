@@ -6,7 +6,7 @@ import {
   startConnectionWithDatabase,
   formatDate
 } from "../methods";
-import { callbackCheckingDuplicateWarning } from "../hand/database";
+import { Subject } from "rxjs";
 
 export function addTournamentData(
   tournament: ITournament,
@@ -162,4 +162,30 @@ function stringQueryForAddTournament(tournament: ITournament): string {
   const currencyString = currency ? `'${currency}')` : "NULL)";
   result += currencyString;
   return result;
+}
+
+function callbackCheckingDuplicateWarning(data: any, notify?: Subject<void>) {
+  return (error: MysqlError | null, response: { message: string }) => {
+    if (error) {
+      if (
+        /ER_DUP_ENTRY: Duplicate entry .+ for key '(PRIMARY)|(unique_index)'/g.test(
+          error.message
+        )
+      ) {
+        return;
+      }
+      if (/ER_LOCK_DEADLOCK/g.test(error.message)) {
+        if (notify) {
+          notify.error(error);
+        }
+        return;
+      }
+      console.log(data);
+      throw error;
+    }
+    if (notify) {
+      notify.next();
+    }
+    checkDuplicatesAndWarnings(response);
+  };
 }

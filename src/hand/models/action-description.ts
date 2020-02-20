@@ -26,5 +26,6 @@ export enum ActionDescription {
   bigBlind = "post big blind",
   smallAndBigBlind = "post small and big blind",
   playAfterButton = "play after button",
-  mucksHand = "mucks hand"
+  mucksHand = "mucks hand",
+  cashOut = "cash out"
 }

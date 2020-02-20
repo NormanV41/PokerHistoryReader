@@ -10,8 +10,6 @@ export class DatabaseConnection {
     database: databaseSecrets.database,
     multipleStatements: true
   });
-  private counter = 0;
-  private allQueriesEnded$ = new Subject<void>();
 
   constructor() {
     this.connection.connect((error) => {
@@ -21,28 +19,21 @@ export class DatabaseConnection {
       }
       console.log("connection established");
     });
-    this.allQueriesEnded$.subscribe(() => {
-      this.connection.end((err) => {
-        if (err) {
-          throw err;
-        }
-        console.log("closing connection");
-      });
-    });
   }
 
   public query(
     query: QueryOptions,
     callback: (error: MysqlError | null, response: any) => void
   ): Query {
-    this.counter++;
-    const extendCallback = (error: MysqlError | null, response: any) => {
-      this.counter--;
-      if (this.counter === 0) {
-        this.allQueriesEnded$.next();
+    return this.connection.query(query, callback);
+  }
+
+  public end(message: string) {
+    this.connection.end((error) => {
+      if (error) {
+        throw error;
       }
-      callback(error, response);
-    };
-    return this.connection.query(query, extendCallback);
+      console.log(message);
+    });
   }
 }

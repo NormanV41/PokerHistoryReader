@@ -63,3 +63,6 @@ typings/
 data/
 .vscode/
 secrets.json
+output.txt
+sql-scripts/count.sql
+sql-scripts/select.sql

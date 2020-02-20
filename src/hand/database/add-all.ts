@@ -104,7 +104,7 @@ function getArrayOfIds(handsToAdd: IHand[]) {
   return subject.asObservable();
 }
 
-function getLeastAndGreatestDate(hands: IHand[]) {
+export function getLeastAndGreatestDate(hands: IHand[]) {
   const greatestDate = hands
     .map((hand) => hand.date)
     .reduce((previous, current, index, array) => {

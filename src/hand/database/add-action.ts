@@ -3,6 +3,8 @@ import { Card } from "../models/card";
 import { IAction } from "../models/action";
 import { Subject } from "rxjs";
 import { DatabaseConnection } from "../../models/database-connection";
+import { getLeastAndGreatestDate } from "./add-all";
+import { formatDate } from "../../methods";
 
 const phases = ["force-bet", "preflop", "flop", "turn", "river", "show-down"];
 
@@ -12,7 +14,8 @@ export function addActions(hands: IHand[], connection: DatabaseConnection) {
     "insert into hand_action(handId,handEnrollmentId,phase,description,amount,raiseToAmount,message" +
     ",rebuyChipsReceived,hand,eliminatedPlayer,increasedBountyBy,finalBounty) values ?";
   const values: Array<Array<string | number | null>> = [];
-  getEnrollmentsForActions(connection).subscribe((enrollments) => {
+  const dates = getLeastAndGreatestDate(hands);
+  getEnrollmentsForActions(connection, dates).subscribe((enrollments) => {
     hands.forEach((hand) => {
       const filterEnrollments = enrollments.filter((enrollment) => {
         if (enrollment.handId !== hand.id) {
@@ -77,13 +80,26 @@ function pushAllActions(
   }
 }
 
-function getEnrollmentsForActions(connection: DatabaseConnection) {
+function getEnrollmentsForActions(
+  connection: DatabaseConnection,
+  dates: { greatestDate: Date; leastDate: Date }
+) {
   const enrollments$ = new Subject<
     Array<{ id: number; playerName: string; seat: number; handId: number }>
   >();
   connection.query(
     {
-      sql: "select id,playerName,seat,handId from hand_enrollment"
+      sql: `select
+      hand_enrollment.id,
+      playerName,
+      seat,
+      handId
+  from
+      hand
+      inner join hand_enrollment on hand_enrollment.handId = hand.id
+  where
+      hand.date between '${formatDate(dates.leastDate)}'
+      and '${formatDate(dates.greatestDate)}'`
     },
     (
       error,

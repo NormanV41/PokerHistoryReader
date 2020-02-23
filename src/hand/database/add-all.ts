@@ -4,7 +4,11 @@ import { readHandsHistory$ } from "../process-hands";
 import { IHand } from "../models/hand";
 import { DatabaseConnection } from "../../models/database-connection";
 import { Subject, merge } from "rxjs";
-import { comparingDates, formatDate } from "../../methods";
+import {
+  comparingDates,
+  formatDate,
+  errorHandlerInTransaction
+} from "../../methods";
 import { addHands } from "./add-hand";
 import { addPlayers } from "./add-player";
 import { addEnrollments } from "./add-enrollment";
@@ -57,26 +61,46 @@ export function addAllData(filename: string) {
 function addAllHandDataHelper(hands: IHand[], connection: DatabaseConnection) {
   const notifyWhenDone$ = new Subject<void>();
   let counter = 2;
-  const handsNotifier$ = addHands(hands, connection);
-  const playersNotifier$ = addPlayers(hands, connection);
-  merge(handsNotifier$, playersNotifier$).subscribe(() => {
-    console.log(
-      `worker: ${process.pid}: hands or players done -- counter: ${counter}`
-    );
-    counter--;
-    if (counter === 0) {
-      setTimeout(() => {
-        addEnrollments(hands, connection).subscribe(() => {
-          counter--;
-          console.log(`worker ${process.pid}: enrollments done`);
-          addActions(hands, connection).subscribe(() => {
-            counter--;
-            console.log(`worker ${process.pid} actions done`);
-            notifyWhenDone$.next();
-          });
-        });
-      }, 400);
+  connection.connection.beginTransaction((errorInTransaction) => {
+    if (errorInTransaction) {
+      throw errorInTransaction;
     }
+    const handsNotifier$ = addHands(hands, connection);
+    const playersNotifier$ = addPlayers(hands, connection);
+    merge(handsNotifier$, playersNotifier$).subscribe(
+      () => {
+        console.log(
+          `worker: ${process.pid}: hands or players done -- counter: ${counter}`
+        );
+        counter--;
+        if (counter === 0) {
+          setTimeout(() => {
+            addEnrollments(hands, connection).subscribe(
+              () => {
+                counter--;
+                console.log(`worker ${process.pid}: enrollments done`);
+                addActions(hands, connection).subscribe(
+                  () => {
+                    counter--;
+                    console.log(`worker ${process.pid} actions done`);
+                    notifyWhenDone$.next();
+                    connection.connection.commit((errorInCommit) => {
+                      errorHandlerInTransaction(errorInCommit, connection);
+                    });
+                  },
+                  (errorInActions) =>
+                    errorHandlerInTransaction(errorInActions, connection)
+                );
+              },
+              (errorInEnrollments) =>
+                errorHandlerInTransaction(errorInEnrollments, connection)
+            );
+          }, 400);
+        }
+      },
+      (errorInHandsOrPlayers) =>
+        errorHandlerInTransaction(errorInHandsOrPlayers, connection)
+    );
   });
   return notifyWhenDone$.asObservable();
 }

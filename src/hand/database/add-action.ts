@@ -27,7 +27,7 @@ export function addActions(hands: IHand[], connection: DatabaseConnection) {
     });
     connection.query({ sql, values: [values] }, (error, response) => {
       if (error) {
-        throw error;
+        notifyWhenDone$.error(error);
       }
       notifyWhenDone$.next();
     });

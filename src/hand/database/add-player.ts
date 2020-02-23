@@ -4,7 +4,7 @@ import { Subject } from "rxjs";
 import { filter } from "rxjs/operators";
 import { MysqlError } from "mysql";
 import { IAction } from "../models/action";
-import { checkDuplicatesAndWarnings } from "../../tournament/database";
+import { getNumberValue } from "../../methods";
 
 export function addPlayers(hands: IHand[], connection: DatabaseConnection) {
   const notifyWhenEnd$ = new Subject<void | {
@@ -82,7 +82,7 @@ function executesQueryForPlayers(
           return;
         }
         console.log("error not handled in add players");
-        throw error;
+        notifyWhenEnd$.error(error);
       }
       notifyWhenEnd$.next();
       checkDuplicatesAndWarnings(response);
@@ -113,4 +113,20 @@ function pushNonSeatPlayers(
       nonSeatPlayers.push(action.nonSeatPlayerName);
     }
   });
+}
+
+function checkDuplicatesAndWarnings(response: { message: string }) {
+  let duplicates = 0;
+  let warnings = 0;
+  try {
+    duplicates = getNumberValue(response.message, /(?<=Duplicates: )\d+/g);
+    warnings = getNumberValue(response.message, /(?<= Warnings: )\d+/g);
+  } catch (error) {
+    console.log(response);
+    throw error;
+  }
+  if (duplicates !== warnings) {
+    console.log(response);
+    throw new Error("duplicates and warnings differ");
+  }
 }

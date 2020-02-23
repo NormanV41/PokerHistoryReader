@@ -2,9 +2,7 @@ import * as fs from "fs";
 import { IPlayer } from "./models/player";
 import { ITournament } from "./models/tournament";
 import { bindCallback } from "rxjs";
-import { map } from "rxjs/operators";
 import {
-  comparingDates,
   parseDollars,
   matchCurrency,
   getPokerStarsDate,
@@ -12,106 +10,11 @@ import {
   parsingNumberFromMatchString,
   getStringValue,
   generalParseDollars,
-  getNumberValue,
-  startConnectionWithDatabase
+  getNumberValue
 } from "../methods";
 import { NoMatchError } from "../models/no-match-error";
-import { addTournamentData } from "./database";
 
 export const newTournaments$ = bindCallback(readTournamentSummary);
-export const existingTournaments$ = bindCallback(readExistingTournaments);
-
-export function addTournamentsData(fileName: string) {
-  newTournaments$(fileName).subscribe((tournaments) => {
-    startConnectionWithDatabase((connection) => {
-      tournaments.forEach((tournament) => {
-        addTournamentData(tournament, connection);
-      });
-    });
-  });
-}
-
-export function writeTournamentsJson(tournaments: ITournament[]) {
-  fs.writeFile(
-    "./data/tournament-summaries/ProcessData/tournaments.json",
-    JSON.stringify(tournaments),
-    (error) => {
-      if (error) {
-        throw error;
-      }
-    }
-  );
-}
-
-export function addTournaments(tournamentsSummaryFileName: string) {
-  let newTournaments: ITournament[] | null = null;
-  let oldTournaments: ITournament[] | null = null;
-  newTournaments$(tournamentsSummaryFileName)
-    .pipe(
-      map((data) =>
-        data.sort((el1, el2) => {
-          return comparingDates(el1.start, el2.start);
-        })
-      )
-    )
-    .subscribe((data) => {
-      newTournaments = data;
-      if (newTournaments && oldTournaments) {
-        mergingTournaments(newTournaments, oldTournaments);
-      }
-    });
-  existingTournaments$().subscribe((data) => {
-    oldTournaments = data;
-    if (newTournaments && oldTournaments) {
-      mergingTournaments(newTournaments, oldTournaments);
-    }
-  });
-}
-
-function mergingTournaments(
-  newTournaments: ITournament[],
-  oldTournaments: ITournament[]
-) {
-  let oldGreatestDate: number;
-  if (oldTournaments.length === 0) {
-    oldGreatestDate = 0;
-  } else {
-    oldGreatestDate = new Date(
-      oldTournaments[oldTournaments.length - 1].start
-    ).getTime();
-  }
-  const cutIndex = newTournaments.findIndex((tournament) => {
-    const start = tournament.start.getTime();
-    return start > oldGreatestDate;
-  });
-  if (cutIndex === -1) {
-    return;
-  }
-  const filterNew = newTournaments.slice(cutIndex);
-  const result = oldTournaments.concat(filterNew);
-  console.log(result.length);
-  writeTournamentsJson(result);
-}
-
-function readExistingTournaments(
-  action: (oldTournaments: ITournament[]) => void
-) {
-  fs.readFile(
-    "./data/tournament-summaries/ProcessData/tournaments.json",
-    { encoding: "utf8" },
-    (error, data) => {
-      if (error) {
-        if (/no such file or directory/g.test(error.message)) {
-          action([]);
-          return;
-        }
-        throw error;
-      }
-      const oldTournaments: ITournament[] = JSON.parse(data);
-      action(oldTournaments);
-    }
-  );
-}
 
 function readTournamentSummary(
   fileName: string,
@@ -187,7 +90,7 @@ function getRebuyAddon(tournamentInfo: string): number[] | null {
   if ((rebuy || rebuy === 0) && (addon || addon === 0)) {
     return [rebuy, addon];
   }
-  if (rebuy || rebuy === 0 || (addon || addon === 0)) {
+  if (rebuy || rebuy === 0 || addon || addon === 0) {
     console.log(rebuy, addon);
     console.log(tournamentInfo);
     throw new Error("this is not consider");

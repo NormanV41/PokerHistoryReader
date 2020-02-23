@@ -89,7 +89,7 @@ function executeQueryForEnrollments(
         });
         return;
       }
-      throw error;
+      notifyWhenEnd$.error(error);
     }
     counter--;
     if (counter === 0) {

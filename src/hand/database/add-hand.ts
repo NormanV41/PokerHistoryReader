@@ -25,7 +25,7 @@ export function addHands(hands: IHand[], connection: DatabaseConnection) {
   ]);
   connection.query({ sql, values: [values] }, (error, response) => {
     if (error) {
-      throw error;
+      notifyWhenEnd$.error(error);
     }
     notifyWhenEnd$.next();
   });

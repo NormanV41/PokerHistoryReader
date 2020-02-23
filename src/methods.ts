@@ -4,6 +4,7 @@ import { NoMatchError } from "./models/no-match-error";
 import { access } from "fs";
 import { Connection, createConnection } from "mysql";
 import { databaseSecrets } from "./config";
+import { DatabaseConnection } from "./models/database-connection";
 /**
  * @returns 1 if date1 is greater than date2, 0 if they are equal,
  *          and -1 if date1 is less than date2
@@ -126,35 +127,6 @@ export function getNumberValue(
   return checkIfNumber(num);
 }
 
-export function startConnectionWithDatabase(
-  action: (connection: Connection) => void
-) {
-  const connection = createConnection({
-    host: "localhost",
-    user: databaseSecrets.user,
-    password: databaseSecrets.password,
-    database: databaseSecrets.database,
-    multipleStatements: true
-  });
-
-  connection.connect((error) => {
-    if (error) {
-      console.error("Error connecting to database");
-      return;
-    }
-    console.log("connection established");
-  });
-
-  action(connection);
-
-  connection.end((err) => {
-    if (err) {
-      throw err;
-    }
-    console.log("connection ended");
-  });
-}
-
 export function transpose(array: Array<Array<string | number>>) {
   const width = array.length || 0;
   const height = array[0].length;
@@ -193,4 +165,12 @@ function prependZero(n: number) {
     return "0" + n;
   }
   return "" + n;
+}
+
+export function errorHandlerInTransaction(
+  error: any,
+  connection: DatabaseConnection
+) {
+  connection.connection.rollback();
+  throw error;
 }

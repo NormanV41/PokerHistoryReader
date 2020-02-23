@@ -1,3 +1,3 @@
-import { addAllData } from "./hand/database/add-all";
+import { addAllData } from "./tournament/database/add-all";
 
-addAllData("handHistory-22850");
+addAllData("enero-2020");

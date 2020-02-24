@@ -14,7 +14,7 @@ import { addPlayers } from "./add-player";
 import { addEnrollments } from "./add-enrollment";
 import { addActions } from "./add-action";
 
-export function addAllData(filename: string) {
+export default function addAllData(filename: string) {
   if (isMaster) {
     const numWorkers = cpus().length;
     const workers: Worker[] = [];
@@ -33,6 +33,9 @@ export function addAllData(filename: string) {
         );
         if (hands.length === 0) {
           console.log("done, no new hands to add");
+          workers.forEach((worker) => {
+            worker.kill();
+          });
           return;
         }
         const elementsPerWorker = Math.ceil(hands.length / workers.length);

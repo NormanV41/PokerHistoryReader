@@ -66,7 +66,7 @@ export class RomanNumeral {
     this.num = arabic;
   }
 
-  toString(): string {
+  public toString(): string {
     let roman = "";
     let N = this.num;
     for (let i = 0; i < this.numbers.length; i++) {
@@ -78,7 +78,7 @@ export class RomanNumeral {
     return roman;
   }
 
-  toInt() {
+  public toInt() {
     return this.num;
   }
 

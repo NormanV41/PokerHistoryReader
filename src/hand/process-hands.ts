@@ -28,7 +28,7 @@ export const readHandsHistory$ = bindCallback(readHandsHistory);
 
 function readHandsHistory(fileName: string, action: (hands: IHand[]) => void) {
   readFile(
-    `./data/hand-history/${fileName}.txt`,
+    fileName,
     {
       encoding: "utf8"
     },

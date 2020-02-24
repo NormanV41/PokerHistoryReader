@@ -11,7 +11,7 @@ import { addTournaments } from "./add-tournaments";
 import { addPlayers } from "./add-players";
 import { addEnrollments } from "./add-enrollments";
 
-export function addAllData(fileName: string) {
+export default function addAllData(fileName: string) {
   newTournaments$(fileName).subscribe((data) => {
     getArrayOfIds(data).subscribe((ids) => {
       const tournaments = data.filter(

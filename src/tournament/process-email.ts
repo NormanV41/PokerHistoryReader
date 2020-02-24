@@ -20,38 +20,34 @@ function readTournamentSummary(
   fileName: string,
   action: (tournaments: ITournament[]) => void
 ) {
-  fs.readFile(
-    `./data/tournament-summaries/${fileName}.eml`,
-    { encoding: "utf8" },
-    (error, data) => {
-      if (error) {
-        throw error;
-      }
-      const tournamentStringArray = data.split("\nPokerStars Tournament");
-      tournamentStringArray.shift();
-      const tournaments = tournamentStringArray
-        .filter((tournamentInfo) => {
-          return filterOutPlayMoneyTournaments(tournamentInfo);
-        })
-        .map<ITournament>((tournamentInfo) => {
-          const { buyIn, currency } = getBuyIn(tournamentInfo);
-          const result: ITournament = {
-            tournamentId: getTournamentId(tournamentInfo),
-            start: getSartDate(tournamentInfo),
-            end: getEndDate(tournamentInfo),
-            buyIn,
-            prizePool: getPrizePool(tournamentInfo),
-            players: getPlayers(tournamentInfo),
-            rebuyAddon: getRebuyAddon(tournamentInfo)
-          };
-          if (currency) {
-            result.currency = currency;
-          }
-          return result;
-        });
-      action(tournaments);
+  fs.readFile(fileName, { encoding: "utf8" }, (error, data) => {
+    if (error) {
+      throw error;
     }
-  );
+    const tournamentStringArray = data.split("\nPokerStars Tournament");
+    tournamentStringArray.shift();
+    const tournaments = tournamentStringArray
+      .filter((tournamentInfo) => {
+        return filterOutPlayMoneyTournaments(tournamentInfo);
+      })
+      .map<ITournament>((tournamentInfo) => {
+        const { buyIn, currency } = getBuyIn(tournamentInfo);
+        const result: ITournament = {
+          tournamentId: getTournamentId(tournamentInfo),
+          start: getSartDate(tournamentInfo),
+          end: getEndDate(tournamentInfo),
+          buyIn,
+          prizePool: getPrizePool(tournamentInfo),
+          players: getPlayers(tournamentInfo),
+          rebuyAddon: getRebuyAddon(tournamentInfo)
+        };
+        if (currency) {
+          result.currency = currency;
+        }
+        return result;
+      });
+    action(tournaments);
+  });
 }
 
 function getBuyIn(

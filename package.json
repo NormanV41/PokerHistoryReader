@@ -1,16 +1,21 @@
 {
-  "name": "pokertracker",
+  "name": "pokerparser",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "./lib/index.js",
+  "bin": {
+    "pokerparser": "./lib/index.js"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "sudo npm i -g && pokerparser --help",
     "start": "npm run build:live",
     "build": "tsc -p .",
     "build:live": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
     "inspect": "tsc -p . && node --inspect-brk lib/index.js && rm -r lib/",
     "format": "prettier --write \"**/*.ts\" \"**/*.html\" \"**/*.scss\" \"**/*.json !(data/)\"",
-    "lint": "tslint \"src/**/*.ts\""
+    "lint": "tslint \"src/**/*.ts\"",
+    "create": "npm run build && npm run test",
+    "refresh": "rm -rf ./node_modules ./package-lock.json && npm"
   },
   "prettier": {
     "arrowParens": "always"
@@ -19,6 +24,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/clear": "^0.1.0",
+    "@types/figlet": "^1.2.0",
     "@types/moment-timezone": "^0.5.12",
     "@types/mysql": "^2.15.7",
     "@types/node": "^12.7.12",
@@ -31,9 +38,14 @@
     "typescript": "^3.6.4"
   },
   "dependencies": {
+    "chalk": "^3.0.0",
+    "clear": "^0.1.0",
+    "commander": "^4.1.1",
+    "figlet": "^1.3.0",
     "moment": "^2.24.0",
     "moment-timezone": "^0.5.26",
     "mysql": "^2.17.1",
+    "path": "^0.12.7",
     "rimraf": "^3.0.0",
     "rxjs": "^6.5.3",
     "table": "^5.4.6"

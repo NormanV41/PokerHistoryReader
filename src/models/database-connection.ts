@@ -7,7 +7,7 @@ export class DatabaseConnection {
     host: "localhost",
     user: databaseSecrets.user,
     password: databaseSecrets.password,
-    database: databaseSecrets.database,
+    database: "pokerdata",
     multipleStatements: true
   });
 

@@ -1,9 +1,6 @@
 import { NotANumberError } from "./models/not-a-number-error";
 import * as timezone from "moment-timezone";
 import { NoMatchError } from "./models/no-match-error";
-import { access } from "fs";
-import { Connection, createConnection } from "mysql";
-import { databaseSecrets } from "./config";
 import { DatabaseConnection } from "./models/database-connection";
 /**
  * @returns 1 if date1 is greater than date2, 0 if they are equal,

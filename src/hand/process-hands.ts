@@ -36,7 +36,9 @@ function readHandsHistory(fileName: string, action: (hands: IHand[]) => void) {
       if (error) {
         throw error;
       }
-      const handStringArray = data.split(/\nHand\s\#/g);
+      const handStringArray = data.split(
+        /PokerStars (?=[(Hand #)(Zoom Hand #)])/g
+      );
       handStringArray.shift();
       const hands: IHand[] = handStringArray
         .filter((handString) => filteringOutWierdFormats(handString))

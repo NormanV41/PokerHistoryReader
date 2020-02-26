@@ -16,28 +16,34 @@ import { addActions } from "./add-action";
 
 export default function addAllData(filename: string) {
   if (isMaster) {
-    const numWorkers = cpus().length;
-    const workers: Worker[] = [];
-    console.log("Master cluster setting up " + numWorkers + " workers...");
-    for (let i = 0; i < numWorkers; i++) {
-      const worker = fork();
-      workers.push(worker);
-    }
-    on("online", (worker) => {
-      console.log(`Worker ${worker.process.pid} is online`);
-    });
     readHandsHistory$(filename).subscribe((data) => {
       getArrayOfIds(data).subscribe((ids) => {
         const hands = data.filter(
           (hand) => ids.find((el) => el.id === hand.id) === undefined
         );
-        if (hands.length === 0) {
-          console.log("done, no new hands to add");
-          workers.forEach((worker) => {
-            worker.kill();
+        if (hands.length < 200) {
+          if (hands.length === 0) {
+            console.log("done, no new hands to add");
+            return;
+          }
+          const connection = new DatabaseConnection();
+          addAllHandDataHelper(hands, connection).subscribe(() => {
+            setTimeout(() => {
+              connection.end("connection ended");
+            });
           });
           return;
         }
+        const numWorkers = cpus().length;
+        const workers: Worker[] = [];
+        console.log("Master cluster setting up " + numWorkers + " workers...");
+        for (let i = 0; i < numWorkers; i++) {
+          const worker = fork();
+          workers.push(worker);
+        }
+        on("online", (worker) => {
+          console.log(`Worker ${worker.process.pid} is online`);
+        });
         const elementsPerWorker = Math.ceil(hands.length / workers.length);
         workers.forEach((worker, index) => {
           worker.send({
@@ -52,11 +58,14 @@ export default function addAllData(filename: string) {
   }
 
   process.on("message", (message: { hands: IHand[] }) => {
+    console.log("running process");
     const connection = new DatabaseConnection();
     addAllHandDataHelper(message.hands, connection).subscribe(() => {
-      connection.end("connection ended");
-      console.log(`exiting worker ${process.pid}`);
-      process.exit();
+      setTimeout(() => {
+        connection.end("connection ended");
+        console.log(`exiting worker ${process.pid}`);
+        process.exit();
+      });
     });
   });
 }
@@ -88,7 +97,9 @@ function addAllHandDataHelper(hands: IHand[], connection: DatabaseConnection) {
                     console.log(`worker ${process.pid} actions done`);
                     notifyWhenDone$.next();
                     connection.connection.commit((errorInCommit) => {
-                      errorHandlerInTransaction(errorInCommit, connection);
+                      if (errorInCommit) {
+                        errorHandlerInTransaction(errorInCommit, connection);
+                      }
                     });
                   },
                   (errorInActions) =>

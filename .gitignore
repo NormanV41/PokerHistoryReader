@@ -66,4 +66,5 @@ secrets.json
 output.txt
 sql-scripts/count.sql
 sql-scripts/select.sql
+defining-sps.sql
 lib/*

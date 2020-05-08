@@ -1,14 +1,14 @@
 import { createConnection, Query, MysqlError, QueryOptions } from "mysql";
 import { Subject } from "rxjs";
-import { databaseSecrets } from "../config";
+import config from "../config";
 
 export class DatabaseConnection {
   public connection = createConnection({
     host: "localhost",
-    user: databaseSecrets.user,
-    password: databaseSecrets.password,
-    database: "pokerdata",
-    multipleStatements: true
+    user: config.databaseSecrets.user,
+    password: config.databaseSecrets.password,
+    database: config.databaseSecrets.database,
+    multipleStatements: true,
   });
 
   constructor() {

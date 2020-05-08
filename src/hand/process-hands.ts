@@ -37,10 +37,10 @@ function readHandsHistory(fileName: string, action: (hands: IHand[]) => void) {
         throw error;
       }
       const handStringArray = data.split(
-        /PokerStars (?=[(Hand #)(Zoom Hand #)])/g
+        /PokerStars (?=(Hand #)|(Zoom Hand #))/g
       );
-      handStringArray.shift();
       const hands: IHand[] = handStringArray
+        .filter((handDataOrTrash) => filterOutTrash(handDataOrTrash))
         .filter((handString) => filteringOutWierdFormats(handString))
         .map<IHand>((handData) => {
           try {
@@ -53,6 +53,16 @@ function readHandsHistory(fileName: string, action: (hands: IHand[]) => void) {
       action(hands);
     }
   );
+}
+
+function filterOutTrash(handDataOrTrash: string) {
+  if (!handDataOrTrash) {
+    return false;
+  }
+  if (handDataOrTrash.length < 50) {
+    return false;
+  }
+  return true;
 }
 
 function filteringOutWierdFormats(handString: string) {
@@ -192,7 +202,9 @@ function getPlayerName(playerData: string): string {
     .replace(/Seat\s\d{1,2}:\s/g, "")
     .match(/.+(?=\s\(\$?\d)/g);
   if (!match) {
+    console.log("\n");
     console.log(playerData);
+    console.log("\n");
     throw new Error("player name didn't match");
   }
   return match[0];

@@ -18,16 +18,18 @@ To compile run
 
 ## Usage
 
-To use it make sure have mysql ready in your machine, then add a secrets.json file at same level of the package.json. The secrets.json file is expected to have the mysql authentication data.
-
+To use it make sure you have a mysql database.
+Then add the following file `$CONFIG/configstore/pockerparser.json` with the following content 
 ```
 {
-"user": "myUsername",
-"password":"myPassword"
+  "db_user": "<username>",
+  "db_password": "<password>",
+  "db_database": "<database url>"
 }
+
 ```
 
-Then run the create-tables.sql script.
+Then run the `sql-scripts/create-tables.sql` script.
 
 To use the application run
 

@@ -40,8 +40,11 @@ function readHandsHistory(fileName: string, action: (hands: IHand[]) => void) {
         /PokerStars (?=(Hand #)|(Zoom Hand #))/g
       );
       const hands: IHand[] = handStringArray
-        .filter((handDataOrTrash) => filterOutTrash(handDataOrTrash))
-        .filter((handString) => filteringOutWierdFormats(handString))
+        .filter(
+          (handDataOrTrash) =>
+            filterOutTrash(handDataOrTrash) &&
+            filteringOutWierdFormats(handDataOrTrash)
+        )
         .map<IHand>((handData) => {
           try {
             return handDataStringToObject(handData);
@@ -60,6 +63,11 @@ function filterOutTrash(handDataOrTrash: string) {
     return false;
   }
   if (handDataOrTrash.length < 50) {
+    return false;
+  }
+  if (
+    /Transcript for your last \d+ hands requested by /g.test(handDataOrTrash)
+  ) {
     return false;
   }
   return true;
@@ -141,12 +149,12 @@ function getDealtHandObject(handData: string) {
 
 function getDealtHandString(handData: string) {
   const match = getPreflopActionString(handData).match(
-    /(?<=NormanV41\s\[).+(?=\])/g
+    /(?<=Dealt to .+ \[).+(?=\])/g
   );
   if (match) {
     return match[0];
   }
-  if (/NormanV41 will be allowed to play after the button/g.test(handData)) {
+  if (/ will be allowed to play after the button/g.test(handData)) {
     return null;
   }
   console.log(getPreflopActionString(handData));

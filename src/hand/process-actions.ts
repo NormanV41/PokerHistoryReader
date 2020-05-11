@@ -274,7 +274,7 @@ export function getPreflopAction(
       if (action.length < 2) {
         return false;
       }
-      return !/(?<=NormanV41\s\[).+(?=\])/g.test(action);
+      return !/Dealt to .+ \[.+\]/g.test(action);
     })
     .map<IAction>((action) => {
       return actionStringToActionObject(action, players, playersNames);

@@ -13,6 +13,7 @@ buyInBounty DECIMAL(8, 2),
 currency varchar(10)
 );
 
+
 CREATE TABLE player (
     username VARCHAR(50) NOT NULL PRIMARY KEY,
     country VARCHAR(50)
@@ -41,7 +42,8 @@ CREATE TABLE hand (
     dealtHand json,
     flop json,
     turn json,
-    river json
+    river json,
+    raw VARCHAR(65535) NOT NULL
 );
 
 CREATE TABLE hand_enrollment (

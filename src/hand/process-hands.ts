@@ -102,7 +102,8 @@ function handDataStringToObject(handData: string) {
     turnAction: getTurnOrRiverAction(handData, players, playersNames),
     river: getTurnOrRiver(handData, true),
     riverAction: getTurnOrRiverAction(handData, players, playersNames, true),
-    showDownAction: getShowDownAction(handData, players, playersNames)
+    showDownAction: getShowDownAction(handData, players, playersNames),
+    raw: handData
   };
   return filterUndefinedAndNull(result) as IHand;
 }

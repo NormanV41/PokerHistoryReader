@@ -18,7 +18,10 @@ To compile run
 
 ## Usage
 
-To use it make sure you have a mysql database.
+To use it make sure you have a mysql database. To install mariadb in Fedora follow [MariaDB](https://fedoraproject.org/wiki/MariaDB)
+
+To add a user to a mysql database follow [How to Create MySQL Users Accounts and Grant Privileges](https://linuxize.com/post/how-to-create-mysql-user-accounts-and-grant-privileges/)
+
 Then add the following file `$CONFIG/configstore/pockerparser.json` with the following content 
 ```
 {

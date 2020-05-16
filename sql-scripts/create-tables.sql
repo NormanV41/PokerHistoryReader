@@ -1,18 +1,17 @@
-use pokerdata;
+USE pokerdata;
 
 CREATE TABLE tournament (
     id BIGINT UNSIGNED NOT NULL PRIMARY KEY,
-    start DATETIME NOT NULL,
-end DATETIME,
-prizePool VARCHAR(50) NOT NULL,
-rebuy TINYINT UNSIGNED,
-addon TINYINT UNSIGNED,
-buyInNoRake DECIMAL(8, 2) NOT NULL,
-rake DECIMAL(7, 2),
-buyInBounty DECIMAL(8, 2),
-currency varchar(10)
+    startTime DATETIME NOT NULL,
+    endTime DATETIME,
+    prizePool VARCHAR(50) NOT NULL,
+    rebuy TINYINT UNSIGNED,
+    addon TINYINT UNSIGNED,
+    buyInNoRake DECIMAL(8, 2) NOT NULL,
+    rake DECIMAL(7, 2),
+    buyInBounty DECIMAL(8, 2),
+    currency varchar(10)
 );
-
 
 CREATE TABLE player (
     username VARCHAR(50) NOT NULL PRIMARY KEY,
@@ -24,14 +23,14 @@ CREATE TABLE tournament_enrollment (
     playerName VARCHAR(50) NOT NULL,
     position MEDIUMINT NOT NULL,
     prize VARCHAR(50) NOT NULL,
-    unique key (tournamentId, playerName),
+    UNIQUE KEY (tournamentId, playerName),
     CONSTRAINT fk_tournament_id FOREIGN KEY (tournamentId) REFERENCES tournament (id),
     CONSTRAINT fk_playerName FOREIGN KEY (playerName) REFERENCES player (username)
 );
 
 CREATE TABLE hand (
     id BIGINT UNSIGNED NOT NULL PRIMARY KEY,
-    tournamentId BIGINT unsigned,
+    tournamentId BIGINT UNSIGNED,
     date DATETIME NOT NULL,
     smallBlind DECIMAL(9, 2) NOT NULL,
     bigBlind DECIMAL(9, 2) NOT NULL,
@@ -43,7 +42,7 @@ CREATE TABLE hand (
     flop json,
     turn json,
     river json,
-    raw VARCHAR(65535) NOT NULL
+    raw TEXT NOT NULL
 );
 
 CREATE TABLE hand_enrollment (
@@ -58,7 +57,7 @@ CREATE TABLE hand_enrollment (
 );
 
 CREATE TABLE hand_action (
-    handId bigint unsigned not null,
+    handId bigint UNSIGNED NOT NULL,
     handEnrollmentId INT,
     phase ENUM(
         'force-bet',
@@ -108,6 +107,6 @@ CREATE TABLE hand_action (
     increasedBountyBy decimal(9, 2),
     finalBounty decimal(9, 2),
     CONSTRAINT fk_handId2 FOREIGN KEY (handId) REFERENCES hand (id),
-    constraint fk_handEnrollmentId foreign key (handEnrollmentId) references hand_enrollment (id),
-    constraint fk_eliminatedPlayer foreign key (eliminatedPlayer) references hand_enrollment (id)
+    CONSTRAINT fk_handEnrollmentId FOREIGN KEY (handEnrollmentId) REFERENCES hand_enrollment (id),
+    CONSTRAINT fk_eliminatedPlayer FOREIGN KEY (eliminatedPlayer) REFERENCES hand_enrollment (id)
 );

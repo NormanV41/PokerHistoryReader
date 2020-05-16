@@ -10,7 +10,7 @@ export function addTournaments(
 ) {
   const notifyWhenDone$ = new Subject<void>();
   const sql =
-    "insert into tournament(id,start,end,prizePool,rebuy,addon,buyInNoRake,rake,buyInBounty,currency) values ?";
+    "insert into tournament(id,startTime,endTime,prizePool,rebuy,addon,buyInNoRake,rake,buyInBounty,currency) values ?";
   const values = tournaments.map((tournament) => tournamentToArray(tournament));
   connection.query(
     { sql, values: [values] },

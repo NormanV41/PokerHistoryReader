@@ -5,6 +5,7 @@ import { bindCallback } from "rxjs";
 import { transpose, round } from "../methods";
 import { table } from "table";
 import { ISTGCount } from "./models/STGCount";
+import logger from "../logger";
 
 // tslint:disable-next-line: variable-name
 export const SPGCount0_25$ = bindCallback(get0_25SPGCount);
@@ -69,7 +70,7 @@ export function printSPGCount0_25(connection: Connection) {
       round(array[1][13] / array[1][8], 3)
     ];
     array.push(fractions);
-    console.log(table(array));
+    logger.log(table(array));
   });
 }
 
@@ -100,7 +101,7 @@ export function printSTGCount0_50(connect: Connection) {
     ];
     array.push(fractionsString);
     array.push(fractions);
-    console.log(table(array));
+    logger.log(table(array));
   });
 }
 

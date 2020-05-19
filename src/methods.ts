@@ -2,6 +2,8 @@ import { NotANumberError } from "./models/not-a-number-error";
 import * as timezone from "moment-timezone";
 import { NoMatchError } from "./models/no-match-error";
 import { DatabaseConnection } from "./models/database-connection";
+import logger from "./logger";
+
 /**
  * @returns 1 if date1 is greater than date2, 0 if they are equal,
  *          and -1 if date1 is less than date2
@@ -33,7 +35,7 @@ export function generalParseDollars(test: string) {
     throw new Error("doesn't match currency");
   }
   if (match.length > 1) {
-    console.log(test);
+    logger.log(test);
     throw new Error("method not implemented for more than one match");
   }
   return parseDollars(match[0]);
@@ -43,12 +45,12 @@ export function generalParseChips(test: string) {
   const match = test.match(/(\s\d{1,}(?![^\s]))|(\(\d{1,}\))/g);
   if (match) {
     if (match.length > 1) {
-      console.log(test);
+      logger.log(test);
       throw new Error("should only be one match");
     }
     return checkIfNumber(Number.parseInt(match[0].replace(/\(|\)/g, ""), 10));
   }
-  console.log(test);
+  logger.log(test);
   throw new Error("didn't match");
 }
 
@@ -157,8 +159,9 @@ export function formatDate(date: Date) {
   )}:${prependZero(minutes)}:${prependZero(seconds)}`;
 }
 
-function prependZero(n: number) {
-  if (n < 10) {
+export function prependZero(n: number, ifIsThreeDigit = false) {
+  const criticalNumber = ifIsThreeDigit ? 100 : 10;
+  if (n < criticalNumber) {
     return "0" + n;
   }
   return "" + n;

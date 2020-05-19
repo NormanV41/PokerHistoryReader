@@ -23,6 +23,7 @@ import { Card } from "./models/card";
 import { IPlayer } from "./models/player";
 import { RomanNumeral } from "./roman-numeral";
 import { bindCallback } from "rxjs";
+import logger from "../logger";
 
 export const readHandsHistory$ = bindCallback(readHandsHistory);
 
@@ -49,7 +50,7 @@ function readHandsHistory(fileName: string, action: (hands: IHand[]) => void) {
           try {
             return handDataStringToObject(handData);
           } catch (error) {
-            console.log(handData);
+            logger.log(handData);
             throw error;
           }
         });
@@ -118,7 +119,7 @@ function getTurnOrRiver(handData: string, isRiver = false) {
     );
     const cards = getHand(turnOrRiverString);
     if (cards.length > 1) {
-      console.log(handData);
+      logger.log(handData);
       throw new Error("not handled yet");
     }
     return cards[0];
@@ -141,8 +142,8 @@ function getDealtHandObject(handData: string) {
   }
   const cardsString = dealtHandString.split(" ");
   if (cardsString.length !== 2 && cardsString.length !== 4) {
-    console.log(handData);
-    console.log(dealtHandString);
+    logger.log(handData);
+    logger.log(dealtHandString);
     throw new Error("is not length 2 or 4");
   }
   return cardsString.map<Card>((card) => new Card(card));
@@ -158,7 +159,7 @@ function getDealtHandString(handData: string) {
   if (/ will be allowed to play after the button/g.test(handData)) {
     return null;
   }
-  console.log(getPreflopActionString(handData));
+  logger.log(getPreflopActionString(handData));
   throw new Error("didn't match dealt hands");
 }
 
@@ -211,9 +212,7 @@ function getPlayerName(playerData: string): string {
     .replace(/Seat\s\d{1,2}:\s/g, "")
     .match(/.+(?=\s\(\$?\d)/g);
   if (!match) {
-    console.log("\n");
-    console.log(playerData);
-    console.log("\n");
+    logger.log(playerData);
     throw new Error("player name didn't match");
   }
   return match[0];
@@ -224,7 +223,7 @@ function getTableId(handData: string): number | string {
     /(?<=Table\s'\d{6,}\s)\d|(?<=Table\s')[A-Z][a-z]+/g
   );
   if (!match) {
-    console.log(handData.slice(0, 500));
+    logger.log(handData.slice(0, 500));
     throw new Error("didnt match table id");
   }
   const matchElement = match[0];
@@ -239,7 +238,7 @@ function whichSeatIsButton(handData: string): number {
   const match = handData.match(/(?<=Seat\s#)\d{1,2}(?=\sis\sthe\sbutton)/g);
   const result = parsingNumberFromMatchString(match);
   if (!result) {
-    console.log(handData);
+    logger.log(handData);
     throw new Error("is not a number");
   }
   return result;
@@ -260,7 +259,7 @@ function getLevel(handData: string): number | null {
   }
   const match = handData.match(/(?<=\sLevel\s)[A-Z]+/g);
   if (!match) {
-    console.log(handData.slice(0, 500));
+    logger.log(handData.slice(0, 500));
     throw new Error("didnt match level roman number");
   }
   return new RomanNumeral(match[0]).toInt();
@@ -271,7 +270,7 @@ function getSmallBigBlind(handData: string): number[] {
     /((?<=Limit\s\().+(?=\)))|((?<=Level\s[A-Z]+\s\().+(?=\)))/g
   );
   if (!match) {
-    console.log(handData.slice(0, 500));
+    logger.log(handData.slice(0, 500));
     throw new Error("didnt match level small and big blind");
   }
   const smallBigArray = match[0].split("/");

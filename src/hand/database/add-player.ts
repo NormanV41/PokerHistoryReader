@@ -5,6 +5,7 @@ import { filter } from "rxjs/operators";
 import { MysqlError } from "mysql";
 import { IAction } from "../models/action";
 import { getNumberValue } from "../../methods";
+import logger from "../../logger";
 
 export function addPlayers(hands: IHand[], connection: DatabaseConnection) {
   const notifyWhenEnd$ = new Subject<void | {
@@ -62,26 +63,36 @@ function executesQueryForPlayers(
   connection: DatabaseConnection
 ) {
   if (counter === 20) {
-    notifyWhenEnd$.error(new Error("more than 3 trials"));
+    notifyWhenEnd$.error(new Error("more than 20 trials"));
+    return;
   }
   const query = "insert ignore into player(username, country) values ?";
   connection.query(
     { sql: query, values: [values] },
-    (error: MysqlError | null, response: { message: string }) => {
+    (
+      error: MysqlError | null,
+      response: { message: string; affectedRows: number }
+    ) => {
       if (error) {
         if (
           /ER_DUP_ENTRY: Duplicate entry .+ for key '(PRIMARY)|(unique_index)'/g.test(
             error.message
           )
         ) {
+          logger.log(
+            `Duplicate entry error inserting players in worker ${process.pid}`
+          );
+          logger.log(error);
           return;
         }
         if (/ER_LOCK_DEADLOCK/g.test(error.message)) {
-          console.log("error deadlock");
+          logger.log(
+            `error deadlock inserting players in worker ${process.pid}, it was trial number ${counter}`
+          );
           notifyWhenEnd$.next({ counter: ++counter, cause: "deadlock" });
           return;
         }
-        console.log("error not handled in add players");
+        logger.log("error not handled in add players");
         notifyWhenEnd$.error(error);
       }
       notifyWhenEnd$.next();
@@ -115,18 +126,25 @@ function pushNonSeatPlayers(
   });
 }
 
-function checkDuplicatesAndWarnings(response: { message: string }) {
+function checkDuplicatesAndWarnings(response: {
+  message: string;
+  affectedRows: number;
+}) {
   let duplicates = 0;
   let warnings = 0;
   try {
     duplicates = getNumberValue(response.message, /(?<=Duplicates: )\d+/g);
     warnings = getNumberValue(response.message, /(?<= Warnings: )\d+/g);
   } catch (error) {
-    console.log(response);
+    logger.log(response);
     throw error;
   }
   if (duplicates !== warnings) {
-    console.log(response);
+    logger.log(response);
     throw new Error("duplicates and warnings differ");
+  } else {
+    logger.log(
+      `${response.affectedRows} players were added in worker ${process.pid}`
+    );
   }
 }

@@ -10,6 +10,7 @@ import { DatabaseConnection } from "../../models/database-connection";
 import { addTournaments } from "./add-tournaments";
 import { addPlayers } from "./add-players";
 import { addEnrollments } from "./add-enrollments";
+import logger from "../../logger";
 
 export default function addAllData(fileName: string) {
   newTournaments$(fileName).subscribe((data) => {
@@ -18,9 +19,9 @@ export default function addAllData(fileName: string) {
         (tournament) =>
           ids.find((el) => el.id === tournament.tournamentId) === undefined
       );
-      console.log(tournaments.length);
+      logger.log(tournaments.length);
       if (tournaments.length === 0) {
-        console.log("done, no new tournaments to add");
+        logger.log("done, no new tournaments to add");
         return;
       }
       const connection = new DatabaseConnection();
@@ -43,12 +44,12 @@ function addAllHelper(
     merge(tournamentsNotifier$, playersNotifier$).subscribe(
       () => {
         counter--;
-        console.log("Players or tournaments added, counter: " + counter);
+        logger.log("Players or tournaments added, counter: " + counter);
         if (counter === 0) {
           setTimeout(() => {
             addEnrollments(tournaments, connection).subscribe(
               () => {
-                console.log("enrollments added");
+                logger.log("enrollments added");
                 connection.connection.commit((errorInCommit) =>
                   errorHandlerInTransaction(errorInCommit, connection)
                 );

@@ -2,6 +2,7 @@ import { IHand } from "../models/hand";
 import { DatabaseConnection } from "../../models/database-connection";
 import { Subject } from "rxjs";
 import { formatDate } from "../../methods";
+import logger from "../../logger";
 
 export function addHands(hands: IHand[], connection: DatabaseConnection) {
   const notifyWhenEnd$ = new Subject<void>();
@@ -28,6 +29,9 @@ export function addHands(hands: IHand[], connection: DatabaseConnection) {
     if (error) {
       notifyWhenEnd$.error(error);
     }
+    logger.log(
+      `${response.affectedRows} hands were added in worker ${process.pid}`
+    );
     notifyWhenEnd$.next();
   });
 

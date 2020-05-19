@@ -1,6 +1,7 @@
 import { Suit } from "./suit";
 import { parsingNumberFromMatchString } from "../../methods";
 import { NotANumberError } from "../../models/not-a-number-error";
+import logger from "../../logger";
 
 export interface ICard {
   rank: number;
@@ -14,12 +15,12 @@ export class Card {
   constructor(card: string) {
     const matchRank = card.match(/[2-9]|A|K|Q|J|T/g);
     if (!matchRank) {
-      console.log(card);
+      logger.log(card);
       throw new Error("didnt match rank");
     }
     const matchSuit = card.match(/s|d|c|h/g);
     if (!matchSuit) {
-      console.log(card);
+      logger.log(card);
       throw new Error("didn't match suit");
     }
     switch (matchSuit[0]) {
@@ -62,7 +63,7 @@ export class Card {
             throw new Error("didn't match rank");
         }
       } else {
-        console.log(error);
+        logger.log(error);
         throw new Error("unexpected error");
       }
     }

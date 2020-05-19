@@ -13,6 +13,7 @@ import {
   getNumberValue
 } from "../methods";
 import { Card } from "./models/card";
+import logger from "../logger";
 
 export function getTurnOrRiverAction(
   handData: string,
@@ -66,8 +67,8 @@ export function getShowDownAction(
       const seat = getNumberValue(action, /(?<=Seat )\d{1,2}(?=: )/g);
       const player = players.find((el) => el.seat === seat);
       if (!player) {
-        console.log(seat);
-        console.log(players);
+        logger.log(seat);
+        logger.log(players);
         throw new Error("should not be undefined");
       }
       action = action.replace(player.name, "");
@@ -229,22 +230,22 @@ function actionStringToActionObjectInForceBetAction(
     counter++;
   }
   if (counter > 1) {
-    console.log(action);
+    logger.log(action);
     throw new Error("counter greater than 1");
   }
   if (!description) {
-    console.log(action);
-    console.log(seat);
+    logger.log(action);
+    logger.log(seat);
     throw new Error("description undefined");
   }
   if (seat === undefined && !nonSeatPlayerName) {
-    console.log(action);
-    console.log(seat);
+    logger.log(action);
+    logger.log(seat);
     throw new Error("should not happened");
   }
   if (seat !== undefined && nonSeatPlayerName) {
-    console.log(action);
-    console.log(seat);
+    logger.log(action);
+    logger.log(seat);
     throw new Error("should not happened");
   }
   const result = {
@@ -424,7 +425,7 @@ function actionStringToActionObject(
       }
 
       if (description === undefined) {
-        console.log(action);
+        logger.log(action);
         throw new Error("action not handled");
       }
       counter++;
@@ -472,28 +473,28 @@ function actionStringToActionObject(
     counter++;
   }
   if (counter !== 1) {
-    console.log(action);
-    console.log(counter);
-    console.log(players);
+    logger.log(action);
+    logger.log(counter);
+    logger.log(players);
 
     throw new Error("something unexpected");
   }
 
   if (description === undefined) {
-    console.log(seat);
-    console.log(description);
-    console.log(amount);
-    console.log(raiseToAmount);
+    logger.log(seat);
+    logger.log(description);
+    logger.log(amount);
+    logger.log(raiseToAmount);
     throw new Error("description is  undefined");
   }
 
   if (seat === undefined && !nonSeatPlayerName) {
-    console.log(action);
+    logger.log(action);
     throw new Error("missing nonSeatPlayerName");
   }
   if (seat !== undefined && nonSeatPlayerName) {
-    console.log(action);
-    console.log(description);
+    logger.log(action);
+    logger.log(description);
     throw new Error("non seat means no seat!!!");
   }
   const result2 = {
@@ -523,8 +524,8 @@ function getAmountForRebuy(action: string) {
       amount = getNumberValue(action, /(?<=receives )\d+/g);
       rebuyChipsReceived = getNumberValue(action, /\d+(?= StarsCoin)/g);
     } else {
-      console.log(action);
-      console.log(generalParseChips(action));
+      logger.log(action);
+      logger.log(generalParseChips(action));
       throw error;
     }
   }
@@ -564,7 +565,7 @@ function getWinsBountyAction(action: string, players: IPlayer[]) {
     )
   );
   if (!mainPlayer || !eliminatedPlayer) {
-    console.log(action);
+    logger.log(action);
     throw new Error("didn't find seat");
   }
   return {
@@ -593,7 +594,7 @@ export function getHand(action: string) {
     if (error instanceof NoMatchError) {
       return testMatch<Card[]>(action.match(/\s\[\]/g), (match) => []);
     }
-    console.log(action);
+    logger.log(action);
     throw error;
   }
 }
@@ -630,7 +631,7 @@ function tryDolarFirstThenChips(action: string) {
       if (result) {
         return result;
       }
-      console.log(action);
+      logger.log(action);
       throw new Error("amount can't be null in this action");
     }
     throw error;
@@ -645,7 +646,7 @@ function getRaiseAction(action: string) {
     /(?<=\sto\s)((\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)|(\d+))/g
   );
   if (!matchAmount || !matchRaiseToAmount) {
-    console.log(action);
+    logger.log(action);
     throw new Error("does not match amount");
   }
   return {

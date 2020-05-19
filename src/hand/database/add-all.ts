@@ -13,6 +13,7 @@ import { addHands } from "./add-hand";
 import { addPlayers } from "./add-player";
 import { addEnrollments } from "./add-enrollment";
 import { addActions } from "./add-action";
+import logger from "../../logger";
 
 export default function addAllData(filename: string) {
   if (isMaster) {
@@ -23,7 +24,7 @@ export default function addAllData(filename: string) {
         );
         if (hands.length < 200) {
           if (hands.length === 0) {
-            console.log("done, no new hands to add");
+            logger.log("done, no new hands to add");
             return;
           }
           const connection = new DatabaseConnection();
@@ -36,13 +37,13 @@ export default function addAllData(filename: string) {
         }
         const numWorkers = cpus().length;
         const workers: Worker[] = [];
-        console.log("Master cluster setting up " + numWorkers + " workers...");
+        logger.log("Master cluster setting up " + numWorkers + " workers...");
         for (let i = 0; i < numWorkers; i++) {
           const worker = fork();
           workers.push(worker);
         }
         on("online", (worker) => {
-          console.log(`Worker ${worker.process.pid} is online`);
+          logger.log(`Worker ${worker.process.pid} is online`);
         });
         const elementsPerWorker = Math.ceil(hands.length / workers.length);
         workers.forEach((worker, index) => {
@@ -58,7 +59,7 @@ export default function addAllData(filename: string) {
   }
 
   process.on("message", (message: { hands: IHand[] }) => {
-    console.log("running process");
+    logger.log("running process");
     const connection = new DatabaseConnection();
     message.hands.forEach((hand) => {
       const date = new Date(hand.date);
@@ -67,7 +68,7 @@ export default function addAllData(filename: string) {
     addAllHandDataHelper(message.hands, connection).subscribe(() => {
       setTimeout(() => {
         connection.end("connection ended");
-        console.log(`exiting worker ${process.pid}`);
+        logger.log(`exiting worker ${process.pid}`);
         process.exit();
       });
     });
@@ -85,39 +86,73 @@ function addAllHandDataHelper(hands: IHand[], connection: DatabaseConnection) {
     const playersNotifier$ = addPlayers(hands, connection);
     merge(handsNotifier$, playersNotifier$).subscribe(
       () => {
-        console.log(
-          `worker: ${process.pid}: hands or players done -- counter: ${counter}`
-        );
         counter--;
         if (counter === 0) {
           setTimeout(() => {
-            addEnrollments(hands, connection).subscribe(
-              () => {
-                counter--;
-                console.log(`worker ${process.pid}: enrollments done`);
-                addActions(hands, connection).subscribe(
+            connection.query(
+              { sql: "select count(*) from hand;" },
+              (error, response) => {
+                if (error) {
+                  throw error;
+                }
+                logger.log(
+                  `doing a count of hands in worker ${process.pid} before executing addEnrollments`
+                );
+                logger.log(response);
+                addEnrollments(hands, connection).subscribe(
                   () => {
                     counter--;
-                    console.log(`worker ${process.pid} actions done`);
-                    notifyWhenDone$.next();
-                    connection.connection.commit((errorInCommit) => {
-                      if (errorInCommit) {
-                        errorHandlerInTransaction(errorInCommit, connection);
-                      }
-                    });
+                    logger.log(`worker ${process.pid}: enrollments done`);
+                    addActions(hands, connection).subscribe(
+                      () => {
+                        counter--;
+                        logger.log(`worker ${process.pid} actions done`);
+                        notifyWhenDone$.next();
+                        connection.connection.commit((errorInCommit) => {
+                          if (errorInCommit) {
+                            errorHandlerInTransaction(
+                              errorInCommit,
+                              connection
+                            );
+                          }
+                        });
+                      },
+                      (errorInActions) =>
+                        errorHandlerInTransaction(errorInActions, connection)
+                    );
                   },
-                  (errorInActions) =>
-                    errorHandlerInTransaction(errorInActions, connection)
+                  (errorInEnrollments) => {
+                    if (errorInEnrollments.code === "ER_NO_REFERENCED_ROW_2") {
+                      connection.query(
+                        { sql: "select count(*) from hand;" },
+                        (errorInCount, responseInCount) => {
+                          if (errorInCount) {
+                            throw errorInCount;
+                          }
+                          logger.log(
+                            `doing a count of hands in worker ${process.pid} before throwing constraint error`
+                          );
+                          logger.log(responseInCount);
+                          connection.connection.rollback();
+                          throw errorInEnrollments;
+                        }
+                      );
+                    } else {
+                      connection.connection.rollback();
+                      throw errorInEnrollments;
+                    }
+                    // errorHandlerInTransaction(errorInEnrollments, connection);
+                  }
                 );
-              },
-              (errorInEnrollments) =>
-                errorHandlerInTransaction(errorInEnrollments, connection)
+              }
             );
           }, 400);
         }
       },
-      (errorInHandsOrPlayers) =>
-        errorHandlerInTransaction(errorInHandsOrPlayers, connection)
+      (errorInHandsOrPlayers) => {
+        logger.log("is this running!!!!! worker: " + process.pid);
+        errorHandlerInTransaction(errorInHandsOrPlayers, connection);
+      }
     );
   });
   return notifyWhenDone$.asObservable();

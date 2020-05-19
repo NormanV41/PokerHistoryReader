@@ -13,6 +13,7 @@ import {
   getNumberValue
 } from "../methods";
 import { NoMatchError } from "../models/no-match-error";
+import logger from "../logger";
 
 export const newTournaments$ = bindCallback(readTournamentSummary);
 
@@ -57,7 +58,7 @@ function getBuyIn(
   let buyIn: number[] | NoMatchError;
   buyIn = getBuyInHelper(tournamentInfo);
   if (buyIn instanceof NoMatchError) {
-    console.log(tournamentInfo.slice(0, 100));
+    logger.log(tournamentInfo.slice(0, 100));
     buyIn = [];
     try {
       buyIn[0] = getNumberValue(
@@ -87,8 +88,8 @@ function getRebuyAddon(tournamentInfo: string): number[] | null {
     return [rebuy, addon];
   }
   if (rebuy || rebuy === 0 || addon || addon === 0) {
-    console.log(rebuy, addon);
-    console.log(tournamentInfo);
+    logger.log(rebuy, addon);
+    logger.log(tournamentInfo);
     throw new Error("this is not consider");
   }
   return null;
@@ -108,7 +109,7 @@ function getPlayers(tournamentInfo: string): IPlayer[] {
       prize: getPlayerPrize(playerInfo, index, array)
     };
     if (/Spin to Win -/g.test(player.country)) {
-      console.log(playerInfo);
+      logger.log(playerInfo);
       throw new Error("wrong country");
     }
     result.push(player);
@@ -145,10 +146,10 @@ function getPlayerPrize(
     if (matchPrize) {
       return parseDollars(matchPrize[0]);
     }
-    console.log(playerInfo);
+    logger.log(playerInfo);
     throw new Error("not account for this player info");
   }
-  console.log(playerInfo);
+  logger.log(playerInfo);
   throw new Error("not account for this player info");
 }
 
@@ -159,7 +160,7 @@ function getPlayerCountry(playerInfo: string) {
     if (/(?<= )\(\)(?=,[ =])/g.test(playerInfo)) {
       return "";
     }
-    console.log(playerInfo);
+    logger.log(playerInfo);
     throw error;
   }
 }
@@ -219,7 +220,7 @@ function getBuyInHelper(tournamentInfo: string): number[] | NoMatchError {
     if (error instanceof NoMatchError) {
       return error;
     }
-    console.log(tournamentInfo.slice(0, 100));
+    logger.log(tournamentInfo.slice(0, 100));
     throw error;
   }
   try {
@@ -234,7 +235,7 @@ function getBuyInHelper(tournamentInfo: string): number[] | NoMatchError {
       if (matchPlayMoney) {
         throw new Error("not accepting play money");
       }
-      console.log(tournamentInfo);
+      logger.log(tournamentInfo);
       throw new Error("not matching expected buy-in");
     }
     throw error;

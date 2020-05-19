@@ -1,6 +1,7 @@
 import { createConnection, Query, MysqlError, QueryOptions } from "mysql";
 import { Subject } from "rxjs";
 import config from "../config";
+import logger from "../logger";
 
 export class DatabaseConnection {
   public connection = createConnection({
@@ -14,10 +15,10 @@ export class DatabaseConnection {
   constructor() {
     this.connection.connect((error) => {
       if (error) {
-        console.error("Error connecting to database");
+        logger.error("Error connecting to database");
         throw error;
       }
-      console.log("connection established");
+      logger.log("connection established");
     });
   }
 
@@ -33,7 +34,7 @@ export class DatabaseConnection {
       if (error) {
         throw error;
       }
-      console.log(message);
+      logger.log(message);
     });
   }
 }

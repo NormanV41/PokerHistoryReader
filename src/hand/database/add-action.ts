@@ -5,6 +5,7 @@ import { Subject } from "rxjs";
 import { DatabaseConnection } from "../../models/database-connection";
 import { getLeastAndGreatestDate } from "./add-all";
 import { formatDate } from "../../methods";
+import logger from "../../logger";
 
 const phases = ["force-bet", "preflop", "flop", "turn", "river", "show-down"];
 
@@ -134,8 +135,8 @@ function mapActionWithTableValues(
     );
   }
   if (!enrollment) {
-    console.log(action);
-    console.log(enrollments);
+    logger.log(action);
+    logger.log(enrollments);
     throw new Error("should not be undefined");
   }
   const eliminatedEnrollment = enrollments.find(

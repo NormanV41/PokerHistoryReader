@@ -7,12 +7,15 @@ import cli from "./cli";
 import { isMaster } from "cluster";
 import config from "./config";
 import addAllData from "./hand/database/add-all";
+import logger from "./logger";
 
 if (isMaster) {
   // clear();
-  console.log(red(textSync("pokerparser", { horizontalLayout: "full" })));
+  logger.log(red(textSync("pokerparser", { horizontalLayout: "full" })));
   cli(config.filename, config.isForTournaments);
 } else {
-  // it does not need the filename if is not master
-  addAllData(config.filename);
+  if (!config.isForTournaments) {
+    // it does not need the filename if is not master
+    addAllData(config.filename);
+  }
 }

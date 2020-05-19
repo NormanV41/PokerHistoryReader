@@ -60,6 +60,10 @@ export default function addAllData(filename: string) {
   process.on("message", (message: { hands: IHand[] }) => {
     console.log("running process");
     const connection = new DatabaseConnection();
+    message.hands.forEach((hand) => {
+      const date = new Date(hand.date);
+      hand.date = date;
+    });
     addAllHandDataHelper(message.hands, connection).subscribe(() => {
       setTimeout(() => {
         connection.end("connection ended");

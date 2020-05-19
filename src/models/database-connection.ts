@@ -8,7 +8,7 @@ export class DatabaseConnection {
     user: config.databaseSecrets.user,
     password: config.databaseSecrets.password,
     database: config.databaseSecrets.database,
-    multipleStatements: true,
+    multipleStatements: true
   });
 
   constructor() {

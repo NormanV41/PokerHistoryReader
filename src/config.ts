@@ -39,6 +39,4 @@ const appConfig = {
   filename
 };
 
-console.log("The process id is : " + process.pid);
-
 export default appConfig;

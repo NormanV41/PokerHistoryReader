@@ -85,13 +85,6 @@ function executesQueryForPlayers(
           logger.log(error);
           return;
         }
-        if (/ER_LOCK_DEADLOCK/g.test(error.message)) {
-          logger.log(
-            `error deadlock inserting players in worker ${process.pid}, it was trial number ${counter}`
-          );
-          notifyWhenEnd$.next({ counter: ++counter, cause: "deadlock" });
-          return;
-        }
         logger.log("error not handled in add players");
         notifyWhenEnd$.error(error);
       }
@@ -144,7 +137,7 @@ function checkDuplicatesAndWarnings(response: {
     throw new Error("duplicates and warnings differ");
   } else {
     logger.log(
-      `${response.affectedRows} players were added in worker ${process.pid}`
+      `${response.affectedRows} players were added`
     );
   }
 }

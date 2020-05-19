@@ -1,5 +1,3 @@
-import { isMaster, fork, Worker, on } from "cluster";
-import { cpus } from "os";
 import { readHandsHistory$ } from "../process-hands";
 import { IHand } from "../models/hand";
 import { DatabaseConnection } from "../../models/database-connection";
@@ -16,61 +14,22 @@ import { addActions } from "./add-action";
 import logger from "../../logger";
 
 export default function addAllData(filename: string) {
-  if (isMaster) {
-    readHandsHistory$(filename).subscribe((data) => {
-      getArrayOfIds(data).subscribe((ids) => {
-        const hands = data.filter(
-          (hand) => ids.find((el) => el.id === hand.id) === undefined
-        );
-        if (hands.length < 200) {
-          if (hands.length === 0) {
-            logger.log("done, no new hands to add");
-            return;
-          }
-          const connection = new DatabaseConnection();
-          addAllHandDataHelper(hands, connection).subscribe(() => {
-            setTimeout(() => {
-              connection.end("connection ended");
-            });
-          });
-          return;
-        }
-        const numWorkers = cpus().length;
-        const workers: Worker[] = [];
-        logger.log("Master cluster setting up " + numWorkers + " workers...");
-        for (let i = 0; i < numWorkers; i++) {
-          const worker = fork();
-          workers.push(worker);
-        }
-        on("online", (worker) => {
-          logger.log(`Worker ${worker.process.pid} is online`);
-        });
-        const elementsPerWorker = Math.ceil(hands.length / workers.length);
-        workers.forEach((worker, index) => {
-          worker.send({
-            hands: hands.slice(
-              elementsPerWorker * index,
-              elementsPerWorker * index + elementsPerWorker
-            )
-          });
+  readHandsHistory$(filename).subscribe((data) => {
+    getArrayOfIds(data).subscribe((ids) => {
+      const hands = data.filter(
+        (hand) => ids.find((el) => el.id === hand.id) === undefined
+      );
+      if (hands.length === 0) {
+        logger.log("done, no new hands to add");
+        return;
+      }
+      const connection = new DatabaseConnection();
+      addAllHandDataHelper(hands, connection).subscribe(() => {
+        setTimeout(() => {
+          connection.end("connection ended");
         });
       });
-    });
-  }
-
-  process.on("message", (message: { hands: IHand[] }) => {
-    logger.log("running process");
-    const connection = new DatabaseConnection();
-    message.hands.forEach((hand) => {
-      const date = new Date(hand.date);
-      hand.date = date;
-    });
-    addAllHandDataHelper(message.hands, connection).subscribe(() => {
-      setTimeout(() => {
-        connection.end("connection ended");
-        logger.log(`exiting worker ${process.pid}`);
-        process.exit();
-      });
+      return;
     });
   });
 }
@@ -89,62 +48,27 @@ function addAllHandDataHelper(hands: IHand[], connection: DatabaseConnection) {
         counter--;
         if (counter === 0) {
           setTimeout(() => {
-            connection.query(
-              { sql: "select count(*) from hand;" },
-              (error, response) => {
-                if (error) {
-                  throw error;
-                }
-                logger.log(
-                  `doing a count of hands in worker ${process.pid} before executing addEnrollments`
-                );
-                logger.log(response);
-                addEnrollments(hands, connection).subscribe(
-                  () => {
+            addEnrollments(hands, connection).subscribe(
+              (affectedRows) => {
+                counter--;
+                logger.log(`${affectedRows} enrollments were added`);
+                addActions(hands, connection).subscribe(
+                  (affectedRowsInActions) => {
                     counter--;
-                    logger.log(`worker ${process.pid}: enrollments done`);
-                    addActions(hands, connection).subscribe(
-                      () => {
-                        counter--;
-                        logger.log(`worker ${process.pid} actions done`);
-                        notifyWhenDone$.next();
-                        connection.connection.commit((errorInCommit) => {
-                          if (errorInCommit) {
-                            errorHandlerInTransaction(
-                              errorInCommit,
-                              connection
-                            );
-                          }
-                        });
-                      },
-                      (errorInActions) =>
-                        errorHandlerInTransaction(errorInActions, connection)
-                    );
+                    logger.log(`${affectedRowsInActions} actions were added`);
+                    notifyWhenDone$.next();
+                    connection.connection.commit((errorInCommit) => {
+                      if (errorInCommit) {
+                        errorHandlerInTransaction(errorInCommit, connection);
+                      }
+                    });
                   },
-                  (errorInEnrollments) => {
-                    if (errorInEnrollments.code === "ER_NO_REFERENCED_ROW_2") {
-                      connection.query(
-                        { sql: "select count(*) from hand;" },
-                        (errorInCount, responseInCount) => {
-                          if (errorInCount) {
-                            throw errorInCount;
-                          }
-                          logger.log(
-                            `doing a count of hands in worker ${process.pid} before throwing constraint error`
-                          );
-                          logger.log(responseInCount);
-                          connection.connection.rollback();
-                          throw errorInEnrollments;
-                        }
-                      );
-                    } else {
-                      connection.connection.rollback();
-                      throw errorInEnrollments;
-                    }
-                    // errorHandlerInTransaction(errorInEnrollments, connection);
-                  }
+                  (errorInActions) =>
+                    errorHandlerInTransaction(errorInActions, connection)
                 );
-              }
+              },
+              (errorInEnrollments) =>
+                errorHandlerInTransaction(errorInEnrollments, connection)
             );
           }, 400);
         }

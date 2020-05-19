@@ -10,7 +10,7 @@ import logger from "../../logger";
 const phases = ["force-bet", "preflop", "flop", "turn", "river", "show-down"];
 
 export function addActions(hands: IHand[], connection: DatabaseConnection) {
-  const notifyWhenDone$ = new Subject<void>();
+  const notifyWhenDone$ = new Subject<number>();
   const sql =
     "insert into hand_action(handId,handEnrollmentId,phase,description,amount,raiseToAmount,message" +
     ",rebuyChipsReceived,hand,eliminatedPlayer,increasedBountyBy,finalBounty) values ?";
@@ -30,7 +30,7 @@ export function addActions(hands: IHand[], connection: DatabaseConnection) {
       if (error) {
         notifyWhenDone$.error(error);
       }
-      notifyWhenDone$.next();
+      notifyWhenDone$.next(response.affectedRows);
     });
   });
   return notifyWhenDone$.asObservable();

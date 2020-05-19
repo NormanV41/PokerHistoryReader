@@ -31,7 +31,8 @@ function executeQueryForEnrollments(
   },
   connection: DatabaseConnection
 ) {
-  const notifyWhenEnd$ = new Subject<void>();
+  let affectedRows = 0;
+  const notifyWhenEnd$ = new Subject<number>();
   let counter = 0;
   const query =
     "insert hand_enrollment(handId, playerName, seat, stack) values ?" +
@@ -49,8 +50,9 @@ function executeQueryForEnrollments(
       return;
     }
     counter--;
+    affectedRows += response.affectedRows;
     if (counter === 0) {
-      notifyWhenEnd$.next();
+      notifyWhenEnd$.next(affectedRows);
     }
   };
   counter++;

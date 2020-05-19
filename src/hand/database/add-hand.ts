@@ -30,7 +30,7 @@ export function addHands(hands: IHand[], connection: DatabaseConnection) {
       notifyWhenEnd$.error(error);
     }
     logger.log(
-      `${response.affectedRows} hands were added in worker ${process.pid}`
+      `${response.affectedRows} hands were added`
     );
     notifyWhenEnd$.next();
   });

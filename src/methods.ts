@@ -162,6 +162,9 @@ export function formatDate(date: Date) {
 export function prependZero(n: number, ifIsThreeDigit = false) {
   const criticalNumber = ifIsThreeDigit ? 100 : 10;
   if (n < criticalNumber) {
+    if (ifIsThreeDigit && n < 10) {
+      return "00" + n;
+    }
     return "0" + n;
   }
   return "" + n;

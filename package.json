@@ -41,7 +41,6 @@
   "dependencies": {
     "@types/configstore": "^4.0.0",
     "chalk": "^3.0.0",
-    "clear": "^0.1.0",
     "colorts": "^0.1.63",
     "commander": "^4.1.1",
     "configstore": "^5.0.1",

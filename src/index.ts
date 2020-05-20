@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-import clear from "clear";
 import { red } from "chalk";
 import { textSync } from "figlet";
 import cli from "./cli";
@@ -10,7 +9,6 @@ import addAllData from "./hand/database/add-all";
 import logger from "./logger";
 
 if (isMaster) {
-  // clear();
   logger.log(red(textSync("pokerparser", { horizontalLayout: "full" })));
   cli(config.filename, config.isForTournaments);
 } else {

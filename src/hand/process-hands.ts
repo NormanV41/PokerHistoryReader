@@ -40,6 +40,7 @@ function readHandsHistory(fileName: string, action: (hands: IHand[]) => void) {
       const handStringArray = data.split(
         /PokerStars (?=(Hand #)|(Zoom Hand #))/g
       );
+      handStringArray.shift();
       const hands: IHand[] = handStringArray
         .filter(
           (handDataOrTrash) =>

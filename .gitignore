@@ -66,5 +66,7 @@ secrets.json
 output.txt
 sql-scripts/count.sql
 sql-scripts/select.sql
+sql-scripts/delete-tournaments.sql
 defining-sps.sql
 lib/*
+sql-scripts/create-tourmants-tables.sql

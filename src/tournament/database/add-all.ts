@@ -73,7 +73,7 @@ function getArrayOfIds(tournamentsToAdd: ITournament[]) {
   const dates = getLeastAndGreatestDate(tournamentsToAdd);
   connection.query(
     {
-      sql: `select id from tournament where tournament.start between '${formatDate(
+      sql: `select id from tournament where tournament.startTime between '${formatDate(
         dates.leastDate
       )}' and '${formatDate(dates.greatestDate)}'`
     },

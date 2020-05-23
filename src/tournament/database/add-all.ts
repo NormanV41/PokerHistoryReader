@@ -19,7 +19,6 @@ export default function addAllData(fileName: string) {
         (tournament) =>
           ids.find((el) => el.id === tournament.tournamentId) === undefined
       );
-      logger.log(tournaments.length);
       if (tournaments.length === 0) {
         logger.log("done, no new tournaments to add");
         return;
@@ -44,15 +43,16 @@ function addAllHelper(
     merge(tournamentsNotifier$, playersNotifier$).subscribe(
       () => {
         counter--;
-        logger.log("Players or tournaments added, counter: " + counter);
         if (counter === 0) {
           setTimeout(() => {
             addEnrollments(tournaments, connection).subscribe(
               () => {
-                logger.log("enrollments added");
-                connection.connection.commit((errorInCommit) =>
-                  errorHandlerInTransaction(errorInCommit, connection)
-                );
+                connection.connection.commit((errorInCommit) => {
+                  if (!errorInCommit) {
+                    return;
+                  }
+                  errorHandlerInTransaction(errorInCommit, connection);
+                });
                 connection.end("connection ended");
               },
               (errorInEnrollment) =>
@@ -73,7 +73,7 @@ function getArrayOfIds(tournamentsToAdd: ITournament[]) {
   const dates = getLeastAndGreatestDate(tournamentsToAdd);
   connection.query(
     {
-      sql: `select id from tournament where tournament.start between '${formatDate(
+      sql: `select id from tournament where tournament.startTime between '${formatDate(
         dates.leastDate
       )}' and '${formatDate(dates.greatestDate)}'`
     },

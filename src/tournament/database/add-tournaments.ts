@@ -3,6 +3,7 @@ import { DatabaseConnection } from "../../models/database-connection";
 import { Subject } from "rxjs";
 import { MysqlError } from "mysql";
 import { formatDate } from "../../methods";
+import logger from "../../logger";
 
 export function addTournaments(
   tournaments: ITournament[],
@@ -18,6 +19,7 @@ export function addTournaments(
       if (error) {
         notifyWhenDone$.error(error);
       }
+      logger.log(`${response.affectedRows} tournaments were added`);
       notifyWhenDone$.next();
     }
   );

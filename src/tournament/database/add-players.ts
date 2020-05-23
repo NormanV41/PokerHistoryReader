@@ -3,6 +3,8 @@ import { DatabaseConnection } from "../../models/database-connection";
 import { MysqlError } from "mysql";
 import { Subject } from "rxjs";
 import { IPlayer } from "../models/player";
+import logger from "../../logger";
+import { parsingNumberFromMatchString } from "../../methods";
 
 export function addPlayers(
   tournaments: ITournament[],
@@ -14,12 +16,19 @@ export function addPlayers(
   const values = getPlayers(tournaments).map<string[]>((player) => {
     return [player.name, player.country];
   });
-  connection.query({ sql, values: [values] }, (error: MysqlError | null) => {
-    if (error) {
-      notifyWhenDone$.error(error);
+  connection.query(
+    { sql, values: [values] },
+    (error: MysqlError | null, response) => {
+      if (error) {
+        notifyWhenDone$.error(error);
+      }
+      const playersAddedOrUpdated = parsingNumberFromMatchString(
+        (response.message as string).match(/(?<=Records: )\d+/g)
+      );
+      logger.log(`${playersAddedOrUpdated} players are added or updated`);
+      notifyWhenDone$.next();
     }
-    notifyWhenDone$.next();
-  });
+  );
   return notifyWhenDone$.asObservable();
 }
 

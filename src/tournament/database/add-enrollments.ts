@@ -2,6 +2,7 @@ import { ITournament } from "../models/tournament";
 import { DatabaseConnection } from "../../models/database-connection";
 import { getPlayers } from "./add-players";
 import { Subject } from "rxjs";
+import logger from "../../logger";
 
 export function addEnrollments(
   tournaments: ITournament[],
@@ -23,6 +24,7 @@ export function addEnrollments(
     if (error) {
       notifyWhenDone$.error(error);
     }
+    logger.log(`${response.affectedRows} enrollments were added`);
     notifyWhenDone$.next();
   });
   return notifyWhenDone$.asObservable();

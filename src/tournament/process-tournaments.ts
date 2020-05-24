@@ -25,7 +25,7 @@ function readTournamentSummary(
     if (error) {
       throw error;
     }
-    const tournamentStringArray = data.split("\nPokerStars Tournament");
+    const tournamentStringArray = data.split(/PokerStars Tournament(?= #)/g);
     tournamentStringArray.shift();
     const tournaments = tournamentStringArray
       .filter((tournamentInfo) => {
@@ -148,6 +148,9 @@ function getPlayerPrize(
     }
     logger.log(playerInfo);
     throw new Error("not account for this player info");
+  }
+  if (prizeString.length <= 1) {
+    return 0;
   }
   logger.log(playerInfo);
   throw new Error("not account for this player info");

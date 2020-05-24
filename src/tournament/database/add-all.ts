@@ -5,7 +5,7 @@ import {
   errorHandlerInTransaction
 } from "../../methods";
 import { Subject, merge } from "rxjs";
-import { newTournaments$ } from "../process-email";
+import { newTournaments$ } from "../process-tournaments";
 import { DatabaseConnection } from "../../models/database-connection";
 import { addTournaments } from "./add-tournaments";
 import { addPlayers } from "./add-players";

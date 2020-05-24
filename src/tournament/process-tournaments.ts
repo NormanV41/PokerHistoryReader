@@ -25,7 +25,7 @@ function readTournamentSummary(
     if (error) {
       throw error;
     }
-    const tournamentStringArray = data.split("PokerStars Tournament");
+    const tournamentStringArray = data.split(/PokerStars Tournament(?= #)/g);
     tournamentStringArray.shift();
     const tournaments = tournamentStringArray
       .filter((tournamentInfo) => {

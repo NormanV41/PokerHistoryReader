@@ -86,6 +86,7 @@ function filteringOutWierdFormats(handString: string) {
 function handDataStringToObject(handData: string) {
   const players = getPlayers(handData);
   const playersNames = players.map<string>((player) => player.name);
+  console.log(getTotalPot(handData));
   const result = {
     id: getHandId(handData),
     tournamentId: getTournamentId(handData),
@@ -323,9 +324,7 @@ function getTotalPot(handData: string) {
     /(?<=Total pot )((\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)|(\d+))(?= \| Rake)/g
   );
   if (!matchTotalPot) {
-    console.log(handData);
     throw new Error("Does not match total pot");
   }
-  console.log(parseDollars(matchTotalPot[0]));
   return parseDollars(matchTotalPot[0]);
 }

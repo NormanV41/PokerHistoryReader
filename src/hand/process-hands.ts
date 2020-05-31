@@ -72,7 +72,7 @@ function filterOutTrash(handDataOrTrash: string) {
   ) {
     return false;
   }
-  return true;
+  return checkIfHandDataIsComplete(handDataOrTrash);
 }
 
 function filteringOutWierdFormats(handString: string) {
@@ -307,4 +307,12 @@ function getHandId(handData: string): number {
     throw new Error("id didn't match");
   }
   return result;
+}
+
+function checkIfHandDataIsComplete(handData: string) {
+  const test = /\*{3} SUMMARY \*{3}(\n.*)+Seat \d+/g.test(handData);
+  if (!test) {
+    console.log(`Hand data with hand id ${getHandId(handData)} is incomplete`);
+  }
+  return test;
 }

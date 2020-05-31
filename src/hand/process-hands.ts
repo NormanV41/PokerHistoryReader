@@ -17,7 +17,8 @@ import {
   parseDollars,
   checkIfNumber,
   getPokerStarsDate,
-  getStringValue
+  getStringValue,
+  generalParseDollars
 } from "../methods";
 import { Card } from "./models/card";
 import { IPlayer } from "./models/player";
@@ -315,4 +316,16 @@ function checkIfHandDataIsComplete(handData: string) {
     console.log(`Hand data with hand id ${getHandId(handData)} is incomplete`);
   }
   return test;
+}
+
+function getTotalPot(handData: string) {
+  const matchTotalPot = handData.match(
+    /(?<=Total pot )((\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)|(\d+))(?= \| Rake)/g
+  );
+  if (!matchTotalPot) {
+    console.log(handData);
+    throw new Error("Does not match total pot");
+  }
+  console.log(parseDollars(matchTotalPot[0]));
+  return parseDollars(matchTotalPot[0]);
 }

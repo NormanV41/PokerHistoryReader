@@ -22,5 +22,7 @@ export interface IHand {
   river?: Card;
   riverAction?: IAction[];
   showDownAction?: IAction[];
+  totalPot: number;
+  rake: number;
   raw: string;
 }

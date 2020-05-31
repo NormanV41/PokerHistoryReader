@@ -311,7 +311,7 @@ function getHandId(handData: string): number {
 }
 
 function checkIfHandDataIsComplete(handData: string) {
-  const test = /\*{3} SUMMARY \*{3}(\n.*)+Seat \d+/g.test(handData);
+  const test = /\*{3} SUMMARY \*{3}([\n,\r].*)+Seat \d+/g.test(handData);
   if (!test) {
     console.log(`Hand data with hand id ${getHandId(handData)} is incomplete`);
   }

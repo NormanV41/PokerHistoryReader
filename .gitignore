@@ -70,3 +70,4 @@ sql-scripts/delete-tournaments.sql
 defining-sps.sql
 lib/*
 sql-scripts/create-tourmants-tables.sql
+queries.ts

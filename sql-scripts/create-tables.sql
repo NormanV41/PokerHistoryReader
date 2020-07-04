@@ -43,6 +43,7 @@ CREATE TABLE hand (
     turn json,
     river json,
     totalPot json,
+    rake decimal(9,2) not null,
     raw TEXT NOT NULL
 );
 

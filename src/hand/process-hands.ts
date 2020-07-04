@@ -17,8 +17,7 @@ import {
   parseDollars,
   checkIfNumber,
   getPokerStarsDate,
-  getStringValue,
-  generalParseDollars
+  getStringValue
 } from "../methods";
 import { Card } from "./models/card";
 import { IPlayer } from "./models/player";
@@ -87,8 +86,6 @@ function filteringOutWierdFormats(handString: string) {
 function handDataStringToObject(handData: string) {
   const players = getPlayers(handData);
   const playersNames = players.map<string>((player) => player.name);
-  const totalPot = getTotalPot(handData);
-  console.log(totalPot);
   const result = {
     id: getHandId(handData),
     tournamentId: getTournamentId(handData),
@@ -107,9 +104,11 @@ function handDataStringToObject(handData: string) {
     turn: getTurnOrRiver(handData),
     turnAction: getTurnOrRiverAction(handData, players, playersNames),
     river: getTurnOrRiver(handData, true),
+    totalPot: getTotalPot(handData),
+    rake: getRake(handData),
     riverAction: getTurnOrRiverAction(handData, players, playersNames, true),
     showDownAction: getShowDownAction(handData, players, playersNames),
-    raw: handData
+    raw: "PokerStars " + handData
   };
   return filterUndefinedAndNull(result) as IHand;
 }
@@ -354,4 +353,15 @@ function getTotalPot(handData: string): IFinalPot {
   totalPot = parseDollars(matchTotalPotAfterMain[0]);
 
   return { totalPot, mainPot, sidePots };
+}
+
+function getRake(handData: string) {
+  const matchRake = handData.match(
+    /(?<=Total pot .+ | Rake )((\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)|(\d+))(?= )/g
+  );
+  if (!matchRake) {
+    throw new Error("does not match rake");
+  }
+  const rake = parseDollars(matchRake[0]);
+  return rake;
 }

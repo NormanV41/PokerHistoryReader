@@ -137,7 +137,9 @@ function getTurnOrRiver(handData: string, isRiver = false) {
   return undefined;
 }
 
-function getFlop(handData: string): Card[] | undefined {
+function getFlop(
+  handData: string
+): Card[] | { firstRun: Card[]; secondRun: Card[] } | undefined {
   if (flopWasPlayed(handData)) {
     const flopString = getStringValue(handData, /(?<=\*\*\* FLOP \*\*\*).+/g);
     return getHand(flopString);

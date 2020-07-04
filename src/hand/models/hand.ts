@@ -16,7 +16,7 @@ export interface IHand {
   dealtHand?: Card[];
   forceBetAction: IAction[];
   preflopAction: IAction[];
-  flop?: Card[];
+  flop?: Card[] | { firstRun: Card[]; secondRun: Card[] };
   flopAction?: IAction[];
   turn?: Card;
   turnAction?: IAction[];

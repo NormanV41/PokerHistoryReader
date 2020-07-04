@@ -83,20 +83,20 @@ function filteringOutWierdFormats(handString: string) {
   return !/Razz Limit/g.test(handString);
 }
 
-function handDataStringToObject(handData: string) {
+function handDataStringToObject(handData: string): IHand {
   const players = getPlayers(handData);
   const playersNames = players.map<string>((player) => player.name);
-  const result = {
+  return {
     id: getHandId(handData),
-    tournamentId: getTournamentId(handData),
+    tournamentId: ifNullReturnUndefined(getTournamentId(handData)),
     date: getDate(handData),
     smallBigBlind: getSmallBigBlind(handData),
-    tournamentLevel: getLevel(handData),
+    tournamentLevel: ifNullReturnUndefined(getLevel(handData)),
     buttonSeat: whichSeatIsButton(handData),
     tableId: getTableId(handData),
     players,
     ante: getAnte(handData),
-    dealtHand: getDealtHandObject(handData),
+    dealtHand: ifNullReturnUndefined(getDealtHandObject(handData)),
     forceBetAction: getForcedBetsActions(handData, players, playersNames),
     preflopAction: getPreflopAction(handData, players, playersNames),
     flop: getFlop(handData),
@@ -110,7 +110,13 @@ function handDataStringToObject(handData: string) {
     showDownAction: getShowDownAction(handData, players, playersNames),
     raw: "PokerStars " + handData
   };
-  return filterUndefinedAndNull(result) as IHand;
+}
+
+function ifNullReturnUndefined<T>(el: T | null): T | undefined {
+  if (el === null) {
+    return undefined;
+  }
+  return el;
 }
 
 function getTurnOrRiver(handData: string, isRiver = false) {

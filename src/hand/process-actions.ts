@@ -3,7 +3,6 @@ import { IAction } from "./models/action";
 import { NoMatchError } from "../models/no-match-error";
 import { ActionDescription } from "./models/action-description";
 import {
-  filterUndefinedAndNull,
   generalParseDollars,
   generalParseChips,
   parseDollars,
@@ -159,7 +158,7 @@ function actionStringToActionObjectInForceBetAction(
   playersNames: string[]
 ) {
   let seat: number | undefined;
-  let description: string | undefined;
+  let description: ActionDescription | undefined;
   let amount: number | undefined;
   let nonSeatPlayerName: string | undefined;
   let counter = 0;
@@ -248,13 +247,12 @@ function actionStringToActionObjectInForceBetAction(
     logger.log(seat);
     throw new Error("should not happened");
   }
-  const result = {
+  return {
     seat,
     description,
     amount,
     nonSeatPlayerName
   };
-  return filterUndefinedAndNull(result) as IAction;
 }
 
 function getForcedBetsActionString(handData: string) {
@@ -497,7 +495,7 @@ function actionStringToActionObject(
     logger.log(description);
     throw new Error("non seat means no seat!!!");
   }
-  const result2 = {
+  return {
     seat,
     description,
     amount,
@@ -510,7 +508,6 @@ function actionStringToActionObject(
     increasedBountyBy,
     finalBounty
   };
-  return filterUndefinedAndNull(result2) as IAction;
 }
 
 function getAmountForRebuy(action: string) {

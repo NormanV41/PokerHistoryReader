@@ -12,7 +12,6 @@ import {
   getShowDownAction
 } from "./process-actions";
 import {
-  filterUndefinedAndNull,
   parsingNumberFromMatchString,
   parseDollars,
   checkIfNumber,

@@ -42,6 +42,7 @@ CREATE TABLE hand (
     flop json,
     turn json,
     river json,
+    totalPot json,
     raw TEXT NOT NULL
 );
 

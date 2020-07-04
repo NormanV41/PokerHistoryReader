@@ -8,7 +8,7 @@ export function addHands(hands: IHand[], connection: DatabaseConnection) {
   const notifyWhenEnd$ = new Subject<void>();
   const sql =
     "insert into hand(id,tournamentId,date,smallBlind, bigBlind, tournamentLevel" +
-    ", buttonSeat, tableId, ante,dealtHand, flop, turn, river, raw) values ?";
+    ", buttonSeat, tableId, ante,dealtHand, flop, turn, river, totalPot, raw) values ?";
   const values = hands.map((hand) => [
     hand.id,
     switchUndefinedForNull(hand.tournamentId),
@@ -23,15 +23,14 @@ export function addHands(hands: IHand[], connection: DatabaseConnection) {
     switchUndefinedForNull(hand.flop),
     switchUndefinedForNull(hand.turn),
     switchUndefinedForNull(hand.river),
+    JSON.stringify(hand.totalPot),
     hand.raw
   ]);
   connection.query({ sql, values: [values] }, (error, response) => {
     if (error) {
       notifyWhenEnd$.error(error);
     }
-    logger.log(
-      `${response.affectedRows} hands were added`
-    );
+    logger.log(`${response.affectedRows} hands were added`);
     notifyWhenEnd$.next();
   });
 

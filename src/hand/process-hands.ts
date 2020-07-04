@@ -25,6 +25,7 @@ import { IPlayer } from "./models/player";
 import { RomanNumeral } from "./roman-numeral";
 import { bindCallback } from "rxjs";
 import logger from "../logger";
+import { IFinalPot } from "./models/final-pot";
 
 export const readHandsHistory$ = bindCallback(readHandsHistory);
 
@@ -86,7 +87,8 @@ function filteringOutWierdFormats(handString: string) {
 function handDataStringToObject(handData: string) {
   const players = getPlayers(handData);
   const playersNames = players.map<string>((player) => player.name);
-  console.log(getTotalPot(handData));
+  const totalPot = getTotalPot(handData);
+  console.log(totalPot);
   const result = {
     id: getHandId(handData),
     tournamentId: getTournamentId(handData),
@@ -319,12 +321,37 @@ function checkIfHandDataIsComplete(handData: string) {
   return test;
 }
 
-function getTotalPot(handData: string) {
+function getTotalPot(handData: string): IFinalPot {
+  let totalPot = 0;
   const matchTotalPot = handData.match(
     /(?<=Total pot )((\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)|(\d+))(?= \| Rake)/g
   );
-  if (!matchTotalPot) {
-    throw new Error("Does not match total pot");
+  if (matchTotalPot) {
+    totalPot = parseDollars(matchTotalPot[0]);
+    return { totalPot };
   }
-  return parseDollars(matchTotalPot[0]);
+
+  const matchSidePot = handData.match(
+    /(?<=Side pot(-\d)? )((\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)|(\d+))(?=\. )/g
+  );
+  if (!matchSidePot) {
+    throw new Error("total pot not handled");
+  }
+  const sidePots = matchSidePot.map((match) => parseDollars(match));
+  const matchMainPot = handData.match(
+    /(?<=Main pot )((\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)|(\d+))(?=\. )/g
+  );
+  if (!matchMainPot) {
+    throw new Error("total pot not handled");
+  }
+  const mainPot = parseDollars(matchMainPot[0]);
+  const matchTotalPotAfterMain = handData.match(
+    /(?<=Total pot )((\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)|(\d+))(?= Main)/g
+  );
+  if (!matchTotalPotAfterMain) {
+    throw new Error("total pot not handled");
+  }
+  totalPot = parseDollars(matchTotalPotAfterMain[0]);
+
+  return { totalPot, mainPot, sidePots };
 }

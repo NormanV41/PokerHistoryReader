@@ -1,6 +1,7 @@
 import { IPlayer } from "./player";
 import { Card } from "./card";
 import { IAction } from "./action";
+import { IFinalPot } from "./final-pot";
 
 export interface IHand {
   id: number;
@@ -22,7 +23,7 @@ export interface IHand {
   river?: Card;
   riverAction?: IAction[];
   showDownAction?: IAction[];
-  totalPot: number;
+  totalPot: IFinalPot;
   rake: number;
   raw: string;
 }

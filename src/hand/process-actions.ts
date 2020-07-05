@@ -112,9 +112,15 @@ export function getFlopAction(
   if (!flopWasPlayed(handData)) {
     return undefined;
   }
-  const flopActionsStringArray = handData
-    .split(/\*{3}\sFLOP\s\*{3}/g)[1]
-    .split(/\*{3}\s([A-Z]|\s)+\s\*{3}/g)[0]
+  const helpStringArray = handData.split(
+    /\*\*\* (SECOND )?(FIRST )?FLOP \*\*\*/g
+  );
+  if (helpStringArray.length < 2) {
+    return undefined;
+  }
+  const flopActionsStringArray = helpStringArray
+    .filter((el) => el !== undefined)[0]
+    .split(/\*{3}\s([A-Z]|\s)+\s\*{3}/g)[1]
     .split("\n")
     .filter((action) => action.length > 1);
   flopActionsStringArray.shift();
@@ -125,7 +131,7 @@ export function getFlopAction(
 
 export function flopWasPlayed(handData: string) {
   try {
-    getStringValue(handData, /(?<=\*\*\* FLOP \*\*\*).+/g);
+    getStringValue(handData, /(?<=\*\*\* (FIRST )?FLOP \*\*\*).+/g);
     return true;
   } catch (error) {
     if (error instanceof NoMatchError) {

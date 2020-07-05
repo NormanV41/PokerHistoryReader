@@ -24,6 +24,7 @@ import { RomanNumeral } from "./roman-numeral";
 import { bindCallback } from "rxjs";
 import logger from "../logger";
 import { IFinalPot } from "./models/final-pot";
+import { NoMatchError } from "../models/no-match-error";
 
 export const readHandsHistory$ = bindCallback(readHandsHistory);
 
@@ -85,6 +86,10 @@ function filteringOutWierdFormats(handString: string) {
 function handDataStringToObject(handData: string): IHand {
   const players = getPlayers(handData);
   const playersNames = players.map<string>((player) => player.name);
+  const flop = getFlop(handData);
+  if (!Array.isArray(flop) && flop !== undefined) {
+    console.log(flop);
+  }
   return {
     id: getHandId(handData),
     tournamentId: ifNullReturnUndefined(getTournamentId(handData)),
@@ -140,8 +145,23 @@ function getFlop(
   handData: string
 ): Card[] | { firstRun: Card[]; secondRun: Card[] } | undefined {
   if (flopWasPlayed(handData)) {
-    const flopString = getStringValue(handData, /(?<=\*\*\* FLOP \*\*\*).+/g);
-    return getHand(flopString);
+    const flopString = getStringValue(
+      handData,
+      /(?<=\*\*\* (FIRST )?FLOP \*\*\*).+/g
+    );
+    const flop = getHand(flopString);
+    let secondFlop: Card[] | undefined;
+    try {
+      secondFlop = getHand(
+        getStringValue(handData, /(?<=\*\*\* SECOND FLOP \*\*\*).+/g)
+      );
+      return { firstRun: flop, secondRun: secondFlop };
+    } catch (error) {
+      if (error instanceof NoMatchError) {
+        return flop;
+      }
+      throw error;
+    }
   }
   return undefined;
 }

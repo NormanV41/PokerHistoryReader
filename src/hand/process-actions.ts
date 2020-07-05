@@ -42,14 +42,25 @@ export function getTurnOrRiverAction(
 export function getShowDownAction(
   handData: string,
   players: IPlayer[],
-  playerNames: string[]
+  playerNames: string[],
+  isSecondShowDown = false
 ) {
-  if (!thereIsShowdown(handData)) {
+  if (!thereIsShowdown(handData, isSecondShowDown)) {
     return undefined;
   }
   const showDownActionsStringArray = handData
-    .split(/\*{3} SHOW DOWN \*{3}/g)[1]
-    .split(/\*{3} SUMMARY \*{3}/g)[0]
+    .split(
+      !isSecondShowDown
+        ? /\*{3} (FIRST )?SHOW DOWN \*{3}/g
+        : /(\*\*\* SECOND SHOW DOWN \*\*\*)/g
+    )
+    .filter((el) => {
+      if (el === "FIRST " || el === "*** SECOND SHOW DOWN ***") {
+        return false;
+      }
+      return el !== undefined;
+    })[1]
+    .split(/\*{3}\s([A-Z]|\s)+\s\*{3}/g)[0]
     .split("\n")
     .filter((action) => action.length > 1);
   const result = showDownActionsStringArray.map((action) =>
@@ -99,9 +110,14 @@ export function turnOrRiverWasPlayed(handData: string, isRiver = false) {
   }
 }
 
-export function thereIsShowdown(handData: string) {
+export function thereIsShowdown(handData: string, isSecondShowDown = false) {
   try {
-    getStringValue(handData, /(\*\*\* SHOW DOWN \*\*\*)/g);
+    getStringValue(
+      handData,
+      !isSecondShowDown
+        ? /\*{3} (FIRST )?SHOW DOWN \*{3}/g
+        : /(\*\*\* SECOND SHOW DOWN \*\*\*)/g
+    );
     return true;
   } catch (error) {
     if (error instanceof NoMatchError) {

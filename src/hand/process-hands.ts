@@ -86,9 +86,6 @@ function filteringOutWierdFormats(handString: string) {
 function handDataStringToObject(handData: string): IHand {
   const players = getPlayers(handData);
   const playersNames = players.map<string>((player) => player.name);
-  if (getHandId(handData) === 198258520336) {
-    console.log(getShowDownAction(handData, players, playersNames));
-  }
   return {
     id: getHandId(handData),
     tournamentId: ifNullReturnUndefined(getTournamentId(handData)),
@@ -111,6 +108,12 @@ function handDataStringToObject(handData: string): IHand {
     rake: getRake(handData),
     riverAction: getTurnOrRiverAction(handData, players, playersNames, true),
     showDownAction: getShowDownAction(handData, players, playersNames),
+    secondShowDownAction: getShowDownAction(
+      handData,
+      players,
+      playersNames,
+      true
+    ),
     raw: "PokerStars " + handData
   };
 }

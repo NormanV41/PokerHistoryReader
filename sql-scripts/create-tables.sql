@@ -67,7 +67,8 @@ CREATE TABLE hand_action (
         'flop',
         'turn',
         'river',
-        'show-down'
+        'show-down',
+        'second-show-down'
     ),
     description ENUM(
         'wins bounty',

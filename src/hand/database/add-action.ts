@@ -7,7 +7,15 @@ import { getLeastAndGreatestDate } from "./add-all";
 import { formatDate } from "../../methods";
 import logger from "../../logger";
 
-const phases = ["force-bet", "preflop", "flop", "turn", "river", "show-down"];
+const phases = [
+  "force-bet",
+  "preflop",
+  "flop",
+  "turn",
+  "river",
+  "show-down",
+  "second-show-down"
+];
 
 export function addActions(hands: IHand[], connection: DatabaseConnection) {
   const notifyWhenDone$ = new Subject<number>();
@@ -76,6 +84,13 @@ function pushAllActions(
     hand.showDownAction.forEach((action) => {
       values.push(
         mapActionWithTableValues(hand.id, action, phases[5], enrollments)
+      );
+    });
+  }
+  if (hand.secondShowDownAction) {
+    hand.secondShowDownAction.forEach((action) => {
+      values.push(
+        mapActionWithTableValues(hand.id, action, phases[6], enrollments)
       );
     });
   }

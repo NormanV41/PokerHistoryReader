@@ -23,6 +23,7 @@ export interface IHand {
   river?: Card | { firstRun: Card; secondRun: Card };
   riverAction?: IAction[];
   showDownAction?: IAction[];
+  secondShowDownAction?: IAction[];
   totalPot: IFinalPot;
   rake: number;
   raw: string;

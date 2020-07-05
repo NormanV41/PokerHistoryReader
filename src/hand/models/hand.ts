@@ -18,9 +18,9 @@ export interface IHand {
   preflopAction: IAction[];
   flop?: Card[] | { firstRun: Card[]; secondRun: Card[] };
   flopAction?: IAction[];
-  turn?: Card;
+  turn?: Card | { firstRun: Card; secondRun: Card };
   turnAction?: IAction[];
-  river?: Card;
+  river?: Card | { firstRun: Card; secondRun: Card };
   riverAction?: IAction[];
   showDownAction?: IAction[];
   totalPot: IFinalPot;

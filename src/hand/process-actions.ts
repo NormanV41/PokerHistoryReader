@@ -24,7 +24,12 @@ export function getTurnOrRiverAction(
     return undefined;
   }
   const turnOrRiverActionsStringArray = handData
-    .split(isRiver ? /\*{3}\sRIVER\s\*{3}/g : /\*{3}\sTURN\s\*{3}/g)[1]
+    .split(
+      isRiver
+        ? /\*{3}\s(SECOND )?(FIRST )?RIVER\s\*{3}/g
+        : /\*{3}\s(SECOND )?(FIRST )?TURN\s\*{3}/g
+    )
+    .filter((el) => el !== undefined)[1]
     .split(/\*{3}\s([A-Z]|\s)+\s\*{3}/g)[0]
     .split("\n")
     .filter((action) => action.length > 1);
@@ -81,7 +86,9 @@ export function turnOrRiverWasPlayed(handData: string, isRiver = false) {
   try {
     getStringValue(
       handData,
-      isRiver ? /(?<=\*\*\* RIVER \*\*\*).+/g : /(?<=\*\*\* TURN \*\*\*).+/g
+      isRiver
+        ? /(?<=\*\*\* (FIRST )?RIVER \*\*\*).+/g
+        : /(?<=\*\*\* (FIRST )?TURN \*\*\*).+/g
     );
     return true;
   } catch (error) {
@@ -115,12 +122,9 @@ export function getFlopAction(
   const helpStringArray = handData.split(
     /\*\*\* (SECOND )?(FIRST )?FLOP \*\*\*/g
   );
-  if (helpStringArray.length < 2) {
-    return undefined;
-  }
   const flopActionsStringArray = helpStringArray
-    .filter((el) => el !== undefined)[0]
-    .split(/\*{3}\s([A-Z]|\s)+\s\*{3}/g)[1]
+    .filter((el) => el !== undefined)[1]
+    .split(/\*{3}\s([A-Z]|\s)+\s\*{3}/g)[0]
     .split("\n")
     .filter((action) => action.length > 1);
   flopActionsStringArray.shift();

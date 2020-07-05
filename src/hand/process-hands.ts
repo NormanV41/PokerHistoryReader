@@ -86,9 +86,8 @@ function filteringOutWierdFormats(handString: string) {
 function handDataStringToObject(handData: string): IHand {
   const players = getPlayers(handData);
   const playersNames = players.map<string>((player) => player.name);
-  const flop = getFlop(handData);
-  if (!Array.isArray(flop) && flop !== undefined) {
-    console.log(flop);
+  if (getHandId(handData) === 198258520336) {
+    console.log(getShowDownAction(handData, players, playersNames));
   }
   return {
     id: getHandId(handData),
@@ -123,47 +122,67 @@ function ifNullReturnUndefined<T>(el: T | null): T | undefined {
   return el;
 }
 
-function getTurnOrRiver(handData: string, isRiver = false) {
-  if (turnOrRiverWasPlayed(handData, isRiver)) {
-    const turnOrRiverString = getStringValue(
+function getTurnOrRiver(
+  handData: string,
+  isRiver = false
+): Card | { firstRun: Card; secondRun: Card } | undefined {
+  if (!turnOrRiverWasPlayed(handData, isRiver)) {
+    return undefined;
+  }
+  const turnOrRiverString = getStringValue(
+    handData,
+    isRiver
+      ? /(?<=\*\*\* (FIRST )?RIVER \*\*\* \[.+\]).+/g
+      : /(?<=\*\*\* (FIRST )?TURN \*\*\* \[.+\]).+/g
+  );
+  const cards = getHand(turnOrRiverString);
+  if (cards.length > 1) {
+    logger.log(handData);
+    throw new Error("not handled yet");
+  }
+  let secondCards: Card[] | undefined;
+  try {
+    const turnOrRiverSecondString = getStringValue(
       handData,
       isRiver
-        ? /(?<=\*\*\* RIVER \*\*\* \[.+\]).+/g
-        : /(?<=\*\*\* TURN \*\*\* \[.+\]).+/g
+        ? /(?<=\*\*\* SECOND RIVER \*\*\* \[.+\]).+/g
+        : /(?<=\*\*\* SECOND TURN \*\*\* \[.+\]).+/g
     );
-    const cards = getHand(turnOrRiverString);
-    if (cards.length > 1) {
-      logger.log(handData);
+    secondCards = getHand(turnOrRiverSecondString);
+    if (secondCards.length > 1) {
       throw new Error("not handled yet");
     }
-    return cards[0];
+    return { firstRun: cards[0], secondRun: secondCards[0] };
+  } catch (error) {
+    if (error instanceof NoMatchError) {
+      return cards[0];
+    }
+    throw error;
   }
-  return undefined;
 }
 
 function getFlop(
   handData: string
 ): Card[] | { firstRun: Card[]; secondRun: Card[] } | undefined {
-  if (flopWasPlayed(handData)) {
-    const flopString = getStringValue(
-      handData,
-      /(?<=\*\*\* (FIRST )?FLOP \*\*\*).+/g
-    );
-    const flop = getHand(flopString);
-    let secondFlop: Card[] | undefined;
-    try {
-      secondFlop = getHand(
-        getStringValue(handData, /(?<=\*\*\* SECOND FLOP \*\*\*).+/g)
-      );
-      return { firstRun: flop, secondRun: secondFlop };
-    } catch (error) {
-      if (error instanceof NoMatchError) {
-        return flop;
-      }
-      throw error;
-    }
+  if (!flopWasPlayed(handData)) {
+    return undefined;
   }
-  return undefined;
+
+  const flop = getHand(
+    getStringValue(handData, /(?<=\*\*\* (FIRST )?FLOP \*\*\*).+/g)
+  );
+  let secondFlop: Card[] | undefined;
+  try {
+    secondFlop = getHand(
+      getStringValue(handData, /(?<=\*\*\* SECOND FLOP \*\*\*).+/g)
+    );
+    return { firstRun: flop, secondRun: secondFlop };
+  } catch (error) {
+    if (error instanceof NoMatchError) {
+      return flop;
+    }
+    throw error;
+  }
 }
 
 function getDealtHandObject(handData: string) {

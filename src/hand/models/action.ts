@@ -13,4 +13,5 @@ export interface IAction {
   eliminatedSeat?: number;
   increasedBountyBy?: number;
   finalBounty?: number;
+  cashOutFee?: number;
 }

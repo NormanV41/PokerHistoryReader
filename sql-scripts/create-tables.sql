@@ -43,7 +43,7 @@ CREATE TABLE hand (
     turn json,
     river json,
     totalPot json,
-    rake decimal(9,2) not null,
+    rake decimal(7,2) not null,
     raw TEXT NOT NULL
 );
 
@@ -109,6 +109,7 @@ CREATE TABLE hand_action (
     eliminatedPlayer int,
     increasedBountyBy decimal(9, 2),
     finalBounty decimal(9, 2),
+    cashOutFee decimal(7,2),
     CONSTRAINT fk_handId2 FOREIGN KEY (handId) REFERENCES hand (id),
     CONSTRAINT fk_handEnrollmentId FOREIGN KEY (handEnrollmentId) REFERENCES hand_enrollment (id),
     CONSTRAINT fk_eliminatedPlayer FOREIGN KEY (eliminatedPlayer) REFERENCES hand_enrollment (id)

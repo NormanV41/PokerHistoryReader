@@ -21,7 +21,7 @@ export function addActions(hands: IHand[], connection: DatabaseConnection) {
   const notifyWhenDone$ = new Subject<number>();
   const sql =
     "insert into hand_action(handId,handEnrollmentId,phase,description,amount,raiseToAmount,message" +
-    ",rebuyChipsReceived,hand,eliminatedPlayer,increasedBountyBy,finalBounty) values ?";
+    ",rebuyChipsReceived,hand,eliminatedPlayer,increasedBountyBy,finalBounty, cashOutFee) values ?";
   const values: Array<Array<string | number | null>> = [];
   const dates = getLeastAndGreatestDate(hands);
   getEnrollmentsForActions(connection, dates).subscribe((enrollments) => {
@@ -170,7 +170,8 @@ function mapActionWithTableValues(
     ifUndefinedPutNullAndIfArrayToJson(action.hand),
     eliminatedId,
     ifUndefinedPutNullAndIfArrayToJson(action.increasedBountyBy),
-    ifUndefinedPutNullAndIfArrayToJson(action.finalBounty)
+    ifUndefinedPutNullAndIfArrayToJson(action.finalBounty),
+    ifUndefinedPutNullAndIfArrayToJson(action.cashOutFee)
   ];
 }
 

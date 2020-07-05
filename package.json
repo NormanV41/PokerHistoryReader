@@ -10,7 +10,7 @@
     "test": "sudo npm i -g && pokerparser --help",
     "start": "npm run build:live",
     "build": "tsc -p .",
-    "build:live": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts /home/nvasquez/Documents/github/PokerHistoryReader/data/hand-history/Hands_26.12.18_5.5.19.txt",
+    "build:live": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts /home/nvasquez/Documents/github/PokerHistoryReader/data/hand-history/handHistory-22850.txt",
     "format": "prettier --write \"**/*.ts\" \"**/*.html\" \"**/*.scss\" \"**/*.json !(data/)\"",
     "lint": "tslint \"src/**/*.ts\"",
     "create": "npm run build && npm run test",

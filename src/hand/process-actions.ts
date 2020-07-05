@@ -322,6 +322,7 @@ function actionStringToActionObject(
   let eliminatedSeat: number | undefined;
   let increasedBountyBy: number | undefined;
   let finalBounty: number | undefined;
+  let cashOutFee: number | undefined;
   if (
     /(\swins\s)(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)\sfor\s((eliminating)|(splitting the elimination of))\s/g.test(
       action
@@ -446,6 +447,17 @@ function actionStringToActionObject(
           /(?<=for \$)((\d{1,3}(\,\d{3})*)(\.\d{2})?)(?!\d+)/g,
           true
         );
+        try {
+          cashOutFee = getNumberValue(
+            action,
+            /(?<= \| Cash Out Fee \$)((\d{1,3}(\,\d{3})*)(\.\d{2})?)/g,
+            true
+          );
+        } catch (error) {
+          if (!(error instanceof NoMatchError)) {
+            throw error;
+          }
+        }
       }
 
       if (description === undefined) {
@@ -532,7 +544,8 @@ function actionStringToActionObject(
     hand,
     eliminatedSeat,
     increasedBountyBy,
-    finalBounty
+    finalBounty,
+    cashOutFee
   };
 }
 

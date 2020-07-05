@@ -406,7 +406,7 @@ function getTotalPot(handData: string): IFinalPot {
 
 function getRake(handData: string) {
   const matchRake = handData.match(
-    /(?<=Total pot .+ | Rake )((\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)|(\d+))(?= )/g
+    /(?<=Total pot .+ | Rake )((\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)|(\d+))(?=( )|(=20))/g
   );
   if (!matchRake) {
     throw new Error("does not match rake");

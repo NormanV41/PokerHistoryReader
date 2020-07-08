@@ -324,7 +324,7 @@ function actionStringToActionObject(
   let finalBounty: number | undefined;
   let cashOutFee: number | undefined;
   if (
-    /(\swins\s)(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)\sfor\s((eliminating)|(splitting the elimination of))\s/g.test(
+    /(\swins\s)(the )?(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)( bounty)?\sfor\s((eliminating)|(splitting the elimination of))\s/g.test(
       action
     )
   ) {
@@ -572,12 +572,25 @@ function getWinsBountyAction(action: string, players: IPlayer[]) {
   const description = ActionDescription.winBounty;
   const playerName = getStringValue(
     action,
-    /.+(?=\swins\s(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?))/g
+    /.+(?=\swins\s(the )?(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?))/g
   );
-  const eliminatedPlayerName = getStringValue(
-    action,
-    /(?<=\sfor\s((eliminating)|(splitting the elimination of))\s).+(?=\sand\stheir\sown)/g
-  );
+  let eliminatedPlayerName = "";
+  if (
+    /(?<=\sfor\s((eliminating)|(splitting the elimination of))\s).+\sand\stheir\sown/g.test(
+      action
+    )
+  ) {
+    eliminatedPlayerName = getStringValue(
+      action,
+      /(?<=\sfor\s((eliminating)|(splitting the elimination of))\s).+(?=\sand\stheir\sown)/g
+    );
+  } else {
+    eliminatedPlayerName = getStringValue(
+      action,
+      /(?<=\sfor\s((eliminating)|(splitting the elimination of))\s).+/g
+    );
+  }
+
   const eliminatedPlayer = players.find(
     (player) => player.name === eliminatedPlayerName
   );
@@ -585,23 +598,35 @@ function getWinsBountyAction(action: string, players: IPlayer[]) {
   const amount = parseDollars(
     getStringValue(
       action,
-      /(?<=\swins\s)(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)(?=\sfor\s)/g
+      /(?<=\swins\s(the )?)(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)(?=( bounty)?\sfor\s)/g
     )
   );
-  const increasedBountyBy = parseDollars(
-    getStringValue(
-      action,
-      /(?<=\sincreases\sby\s)(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)(?=\sto\s)/g
-    )
-  );
-  const finalBounty = parseDollars(
-    getStringValue(
-      action,
-      /(?<=(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)\sto\s)(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)/g
-    )
-  );
+  let increasedBountyBy: number | undefined;
+  let finalBounty: number | undefined;
+
+  try {
+    increasedBountyBy = parseDollars(
+      getStringValue(
+        action,
+        /(?<=\sincreases\sby\s)(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)(?=\sto\s)/g
+      )
+    );
+    finalBounty = parseDollars(
+      getStringValue(
+        action,
+        /(?<=(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)\sto\s)(\$(\d{1,3}(\,\d{3})*)(\.\d{2})?)/g
+      )
+    );
+  } catch (error) {
+    if (!(error instanceof NoMatchError)) {
+      throw error;
+    }
+  }
+
   if (!mainPlayer || !eliminatedPlayer) {
     logger.log(action);
+    logger.log(playerName);
+    logger.log(eliminatedPlayerName);
     throw new Error("didn't find seat");
   }
   return {
